@@ -43,7 +43,24 @@ export default function ContractChat() {
   const handleFileUpload = async (file: File) => {
     setUploading(true);
     try {
-      const text = await file.text();
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/extract-text', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to extract text');
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to extract text');
+      }
+
+      const text = data.text;
       setContract({
         name: file.name,
         size: file.size,
@@ -71,47 +88,7 @@ export default function ContractChat() {
     setUploading(false);
   };
 
-  const generateResponse = (userQuery: string, contractText: string): string => {
-    const query = userQuery.toLowerCase();
-    
-    // Detect question type and generate relevant response
-    if (query.includes('red flag') || query.includes('risk') || query.includes('concern')) {
-      return `Based on my analysis of the contract, here are potential red flags to watch out for:\n\n⚠️ **Key Concerns:**\n• Unlimited liability clauses - Check for caps on damages\n• Auto-renewal terms - Look for clear termination procedures\n• One-sided indemnification - Ensure mutual protection\n• Unclear payment terms - Verify payment schedules and amounts\n• Restrictive non-compete clauses - Consider geographic and time limits\n\nI recommend having a legal professional review these specific sections before signing.`;
-    }
-    
-    if (query.includes('payment') || query.includes('fee') || query.includes('price')) {
-      return `Regarding payment terms in this contract:\n\n💰 **Payment Information:**\n• The contract appears to outline payment obligations for both parties\n• Look for sections labeled "Compensation", "Fees", or "Payment Terms"\n• Check for late payment penalties or interest charges\n• Verify invoice procedures and payment schedules\n• Note any deposit or advance payment requirements\n\nWould you like me to highlight specific payment-related clauses?`;
-    }
-    
-    if (query.includes('termination') || query.includes('cancel') || query.includes('end')) {
-      return `Here's what you need to know about terminating this contract:\n\n📋 **Termination Details:**\n• Notice period requirements (typically 30-90 days)\n• Conditions for early termination\n• Penalties or fees for breaking the contract\n• Post-termination obligations\n• Final payment settlements\n\nAlways follow the exact termination procedure specified to avoid disputes.`;
-    }
-    
-    if (query.includes('obligation') || query.includes('responsible') || query.includes('duty')) {
-      return `Your main obligations under this contract include:\n\n✓ **Primary Responsibilities:**\n• Performance of agreed services or deliverables\n• Meeting specified timelines and deadlines\n• Maintaining confidentiality of sensitive information\n• Compliance with relevant laws and regulations\n• Providing necessary documentation and reports\n\nMake sure you can realistically fulfill these obligations before signing.`;
-    }
-    
-    if (query.includes('intellectual property') || query.includes('ip') || query.includes('copyright')) {
-      return `Intellectual Property (IP) provisions in this contract:\n\n🔒 **IP Rights:**\n• Ownership of work product and deliverables\n• Pre-existing IP retained by original owner\n• License grants and usage rights\n• Confidentiality and trade secret protection\n• Moral rights and attribution requirements\n\nIP clauses are critical - ensure you understand who owns what after the contract ends.`;
-    }
-
-    if (query.includes('liability') || query.includes('indemnif')) {
-      return `Liability and indemnification provisions:\n\n⚖️ **Legal Protection:**\n• Liability caps and limitations\n• Indemnification obligations (who protects whom)\n• Insurance requirements\n• Force majeure clauses\n• Dispute resolution procedures\n\nThese clauses determine who bears financial responsibility if things go wrong.`;
-    }
-
-    if (query.includes('confidential') || query.includes('nda') || query.includes('secret')) {
-      return `Confidentiality provisions in this contract:\n\n🔐 **Confidentiality Terms:**\n• Definition of confidential information\n• Permitted disclosures and exceptions\n• Duration of confidentiality obligations\n• Return or destruction of confidential materials\n• Consequences of breach\n\nConfidentiality often survives contract termination - these obligations may be permanent.`;
-    }
-
-    if (query.includes('expire') || query.includes('term') || query.includes('duration')) {
-      return `Contract term and duration:\n\n📅 **Time Period:**\n• Initial contract term (start and end dates)\n• Automatic renewal provisions\n• Extension options\n• Notice requirements for non-renewal\n• Surviving obligations after expiration\n\nMark key dates in your calendar to avoid unwanted auto-renewals.`;
-    }
-
-    // Default response
-    return `I've analyzed your question about the contract. Here's a helpful overview:\n\n📄 **Key Points:**\n• This contract contains important legal obligations for all parties\n• Review all terms carefully before signing\n• Pay special attention to payment, termination, and liability clauses\n• Consider having a legal professional review complex sections\n• Keep a signed copy for your records\n\nFeel free to ask more specific questions about any clause or section!`;
-  };
-
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     // Add user message
@@ -124,22 +101,60 @@ export default function ContractChat() {
     setMessages(prev => [...prev, userMsg]);
     setInputMessage('');
 
-    // Simulate AI thinking
+    // Indicate AI thinking
     setThinking(true);
-    setTimeout(() => {
-      const response = contract 
-        ? generateResponse(inputMessage, contract.text)
-        : "Please upload a contract first so I can help you with specific questions about it.";
+    
+    if (!contract) {
+      setTimeout(() => {
+        const assistantMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "Please upload a contract first so I can help you with specific questions about it.",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMsg]);
+        setThinking(false);
+      }, 500);
+      return;
+    }
 
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg.content,
+          context: {
+            contractText: contract.text
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get chat response');
+      }
+
+      const data = await response.json();
+      
       const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         role: 'assistant',
-        content: response,
+        content: data.response || "I couldn't generate an answer. Please try again.",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMsg]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error connecting to the AI assistant. Please try asking your question again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setThinking(false);
-    }, 1500);
+    }
   };
 
   const suggestedQuestions = [
