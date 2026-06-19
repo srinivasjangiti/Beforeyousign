@@ -2096,6 +2096,47 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
               </div>
             )}
 
+            {/* Smart Contract Insights */}
+            {(() => {
+              let financial = 0, termination = 0, liability = 0, compliance = 0;
+              analysis.clauses.forEach(c => {
+                const text = (c.title + ' ' + (c.explanation || '') + ' ' + (c.plainLanguage || '')).toLowerCase();
+                const weight = c.riskLevel === 'critical' ? 3 : c.riskLevel === 'high' ? 2 : c.riskLevel === 'medium' ? 1 : 0.5;
+                if (text.match(/payment|fee|financ|penalty|interest|money/)) financial += weight;
+                if (text.match(/terminat|cancel|expire/)) termination += weight;
+                if (text.match(/liab|indemn|warrant|damage/)) liability += weight;
+                if (text.match(/compl|law|regul|jurisdict|govern/)) compliance += weight;
+              });
+              const getLevel = (score: number) => score >= 5 ? 'High' : score >= 2 ? 'Medium' : 'Low';
+              
+              const insights = [
+                { label: 'Financial Risk', level: getLevel(financial) },
+                { label: 'Termination Risk', level: getLevel(termination) },
+                { label: 'Liability Risk', level: getLevel(liability) },
+                { label: 'Compliance Risk', level: getLevel(compliance) },
+                { label: 'Negotiation Priority', level: analysis.riskScore > 70 ? 'High' : analysis.riskScore > 40 ? 'Medium' : 'Low' },
+              ];
+
+              return (
+                <div className="mb-6 bg-white border border-stone-200 p-6 shadow-sm rounded-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Lightbulb className="w-5 h-5 text-indigo-600" />
+                    <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider">Smart Contract Insights</h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {insights.map((insight, idx) => (
+                      <div key={idx} className="bg-stone-50 border border-stone-100 p-4 rounded text-center group hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all duration-300">
+                        <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-2 font-bold">{insight.label}</div>
+                        <div className={`text-lg font-bold ${insight.level === 'High' ? 'text-red-600' : insight.level === 'Medium' ? 'text-amber-600' : 'text-green-600'}`}>
+                          {insight.level}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="border-l-2 border-stone-900 pl-8 bg-stone-50/50 p-6 -mx-2">
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">Executive Summary</h3>
