@@ -24,10 +24,12 @@ export default function AIContractDrafterComponent() {
   const [draftedContract, setDraftedContract] = useState<DraftedContract | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<'balanced' | 'protective' | 'simple'>('balanced');
+  const [error, setError] = useState<string | null>(null);
 
   const handleDraft = async () => {
     setLoading(true);
     setStep('drafting');
+    setError(null);
 
     try {
       const request: ContractDraftRequest = {
@@ -52,16 +54,35 @@ export default function AIContractDrafterComponent() {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(err.error || 'Failed to draft contract');
+        let errMessage = 'Failed to draft contract';
+        if (res.status === 401) errMessage = 'Please sign in to draft a contract.';
+        else if (res.status === 403) errMessage = 'You do not have permission to draft contracts.';
+        else if (res.status >= 500) errMessage = 'Server error. Please try again later.';
+        
+        try {
+          const errData = await res.json();
+          errMessage = errData.error || errMessage;
+        } catch {
+          // Ignore JSON parse errors for non-JSON error pages
+        }
+        throw new Error(errMessage);
       }
 
-      const result: DraftedContract = await res.json();
+      const text = await res.text();
+      if (!text) throw new Error('Empty response from server');
+      
+      let result: DraftedContract;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid response format from server');
+      }
+
       setDraftedContract(result);
       setStep('result');
-    } catch (error) {
-      console.error('Drafting failed:', error);
-      alert('Failed to draft contract. Please try again.');
+    } catch (err: any) {
+      console.error('Drafting failed:', err);
+      setError(err.message || 'Network error. Please check your connection.');
       setStep('input');
     } finally {
       setLoading(false);
@@ -98,6 +119,12 @@ export default function AIContractDrafterComponent() {
       {step === 'input' && (
         <div className="bg-white border-2 border-stone-900 p-8 shadow-sm">
           <div className="space-y-8">
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-600 p-4 mb-6">
+                <p className="text-red-800 font-semibold text-sm uppercase tracking-wide">⚠️ Error</p>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+              </div>
+            )}
             {/* Contract Type */}
             <div>
               <label className="block text-sm font-semibold text-stone-900 mb-2 uppercase tracking-wide">

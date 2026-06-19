@@ -19,8 +19,8 @@ export class ContractAnalyzer {
   ): Promise<ContractAnalysis> {
     const maxRetries = Math.max(1, Number.parseInt(process.env.ANALYZE_MAX_RETRIES || '1', 10));
     const baseDelay = 750;
-    // Reduced defaults: smaller prompt + fewer tokens = faster inference (15-25s vs 50-90s)
-    const maxPromptChars = Math.max(3000, Number.parseInt(process.env.ANALYZE_MAX_PROMPT_CHARS || '6000', 10));
+    // Increased limit to support full analysis of large contracts (up to ~25k tokens).
+    const maxPromptChars = Math.max(3000, Number.parseInt(process.env.ANALYZE_MAX_PROMPT_CHARS || '100000', 10));
     const modelOutputTokens = Math.max(512, Number.parseInt(process.env.ANALYZE_MAX_OUTPUT_TOKENS || '1024', 10));
     const trimmedContractText = contractText.length > maxPromptChars
       ? `${contractText.slice(0, maxPromptChars)}\n\n[Contract text truncated for faster analysis due to deployment limits]`

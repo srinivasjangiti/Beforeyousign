@@ -352,8 +352,14 @@ export default function PDFTools() {
       setUploadProgress(100);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Processing failed');
+        let errMessage = 'Processing failed';
+        try {
+          const errorData = await response.json();
+          errMessage = errorData.error || errMessage;
+        } catch {
+          errMessage = `Server returned status ${response.status}`;
+        }
+        throw new Error(errMessage);
       }
 
       // Check if response is a file download or JSON

@@ -226,10 +226,10 @@ function getActivityIcon(type: ActivityItem['type']) {
 }
 
 export default function UserDashboard() {
-    const [summary] = useState<ContractSummary>(sampleSummary);
-    const [activities] = useState<ActivityItem[]>(sampleActivities);
-    const [deadlines] = useState<UpcomingDeadline[]>(sampleDeadlines);
-    const [healthScore] = useState(76);
+    const summary: ContractSummary = sampleSummary;
+    const activities: ActivityItem[] = sampleActivities;
+    const deadlines: UpcomingDeadline[] = sampleDeadlines;
+    const healthScore = 76;
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {

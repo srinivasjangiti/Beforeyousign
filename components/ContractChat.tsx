@@ -60,6 +60,13 @@ export default function ContractChat() {
       setMessages(prev => [...prev, confirmMsg]);
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error reading that file. Please try a different document.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
     }
     setUploading(false);
   };
