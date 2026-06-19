@@ -793,3 +793,17 @@ Current Progress:
 
 Next Audit:
 Unused Utility Audit
+
+FINDING-CONTRACT-CHAT
+Status: RESOLVED
+
+Description:
+Replaced regex-based mock chat with NVIDIA-powered contextual contract Q&A.
+
+Files:
+- app/api/chat/route.ts
+- app/api/extract-text/route.ts
+- components/ContractChat.tsx
+
+Additional Impact:
+Resolved dormant AnalysisResult chat functionality through unified endpoint.

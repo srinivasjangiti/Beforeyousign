@@ -226,14 +226,27 @@ function getActivityIcon(type: ActivityItem['type']) {
 }
 
 export default function UserDashboard() {
-    const summary: ContractSummary = sampleSummary;
-    const activities: ActivityItem[] = sampleActivities;
-    const deadlines: UpcomingDeadline[] = sampleDeadlines;
-    const healthScore = 76;
+    const [summary, setSummary] = useState<ContractSummary>(sampleSummary);
+    const [activities, setActivities] = useState<ActivityItem[]>(sampleActivities);
+    const [deadlines] = useState<UpcomingDeadline[]>(sampleDeadlines);
+    const [healthScore, setHealthScore] = useState<number>(76);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         setIsLoaded(true);
+        fetch('/api/dashboard')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setSummary(data.summary);
+                    setHealthScore(data.healthScore);
+                    setActivities(data.activities.map((a: any) => ({
+                        ...a,
+                        timestamp: new Date(a.timestamp)
+                    })));
+                }
+            })
+            .catch(err => console.error("Failed to load dashboard data:", err));
     }, []);
 
     return (

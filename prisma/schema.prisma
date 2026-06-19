@@ -476,3 +476,23 @@ model AuditLog {
 
   @@map("audit_log")
 }
+
+model AnalyzedContract {
+  id               String   @id @default(cuid())
+
+  fileName         String
+  contractType     String?
+
+  riskScore        Int
+  summary          String   @db.Text
+
+  redFlagsCount    Int
+  clausesCount     Int
+
+  analysisVersion  String   @default("v1")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("analyzed_contracts")
+}

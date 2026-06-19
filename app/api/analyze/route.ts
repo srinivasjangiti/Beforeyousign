@@ -5,6 +5,9 @@ import { DocumentParser } from '@/lib/document-parser';
 import { ContractAnalyzer } from '@/lib/contract-analyzer';
 import { validateContractFile, sanitizeInput } from '@/lib/security';
 import { createNvidiaClient, NVIDIA_MODELS, parseJsonResponse } from '@/lib/nvidia-client';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /**
  * Validates the parsed AI JSON response against the expected domain schema.
@@ -156,6 +159,23 @@ export async function POST(request: NextRequest) {
         const rawAnalysisData = parseJsonResponse<unknown>(fullText);
         const analysisData = validateAnalysisData(rawAnalysisData);
         const analysis = ContractAnalyzer.formatAnalysis(analysisData, file.name, file.size);
+
+        // MVP Dashboard Persistence
+        try {
+          await prisma.analyzedContract.create({
+            data: {
+              fileName: file.name,
+              contractType: (analysisData.contractType as string) || 'Unknown',
+              riskScore: analysis.riskScore || 0,
+              summary: analysis.summary || '',
+              redFlagsCount: analysis.redFlags?.length || 0,
+              clausesCount: analysis.clauses?.length || 0,
+            }
+          });
+        } catch (e) {
+          console.error("Dashboard persistence failed", e);
+        }
+
         send({ type: 'done', analysis, requestId });
         controller.close();
 
