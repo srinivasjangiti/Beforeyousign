@@ -6,6 +6,17 @@ import { clauseAlternatives } from '@/lib/templates-data';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardShortcuts } from '@/lib/keyboard-shortcuts';
 
+const getReason = (category: string) => {
+  switch(category) {
+    case 'Indemnification': return 'Both clauses contain indemnification obligations, third-party liability language, and defense-cost allocation.';
+    case 'Governing Law': return 'Both clauses establish jurisdiction, venue preferences, and applicable state or national laws.';
+    case 'Termination': return 'Both clauses outline conditions for contract dissolution, notice periods, and material breach criteria.';
+    case 'Confidentiality': return 'Both clauses specify non-disclosure obligations, protected information definitions, and survival periods.';
+    case 'Liability': return 'Both clauses address damage caps, liability limitations, and exclusion of indirect damages.';
+    default: return `Both clauses share significant legal phrasing and semantic structure relating to standard ${category.toLowerCase()} provisions.`;
+  }
+};
+
 interface AnalysisResultProps {
   analysis: ContractAnalysis;
 }
@@ -88,6 +99,30 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
 
   // NEW: Executive Report
   const [showExecutiveReport, setShowExecutiveReport] = useState(false);
+
+  // NEW: ML Semantic Similarity
+  const [similarClauses, setSimilarClauses] = useState<Record<string, any[]>>({});
+  const [isSearchingSimilarity, setIsSearchingSimilarity] = useState<Record<string, boolean>>({});
+
+  const handleFindSimilarClauses = async (clauseId: string, text: string) => {
+    setIsSearchingSimilarity(prev => ({ ...prev, [clauseId]: true }));
+    try {
+      const response = await fetch('/api/ml/similar-clauses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, topK: 3 })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSimilarClauses(prev => ({ ...prev, [clauseId]: data.results }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch similar clauses:', error);
+      showToast('Failed to find similar clauses. Is the ML engine running?', 'error');
+    } finally {
+      setIsSearchingSimilarity(prev => ({ ...prev, [clauseId]: false }));
+    }
+  };
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -372,41 +407,6 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
     return grouped;
   }, [filteredAndSortedClauses, groupByCategory]);
   
-  // AI-Powered: Detect similar clauses (simple text similarity)
-  const similarClauses = useMemo(() => {
-    const similar: Map<string, string[]> = new Map();
-    
-    const getKeywords = (text: string) => {
-      return text.toLowerCase()
-        .replace(/[^\w\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 4) // Only meaningful words
-        .slice(0, 20); // Top 20 keywords
-    };
-    
-    analysis.clauses.forEach((clause, i) => {
-      const keywords = getKeywords(clause.originalText + ' ' + clause.plainLanguage);
-      const matches: string[] = [];
-      
-      analysis.clauses.forEach((otherClause, j) => {
-        if (i !== j) {
-          const otherKeywords = getKeywords(otherClause.originalText + ' ' + otherClause.plainLanguage);
-          const commonKeywords = keywords.filter(k => otherKeywords.includes(k));
-          
-          // If >30% keywords match, consider similar
-          if (commonKeywords.length / keywords.length > 0.3) {
-            matches.push(otherClause.id);
-          }
-        }
-      });
-      
-      if (matches.length > 0) {
-        similar.set(clause.id, matches.slice(0, 2)); // Max 2 similar clauses
-      }
-    });
-    
-    return similar;
-  }, [analysis.clauses]);
 
   // Toggle sort direction or change sort field
   const handleSort = (field: 'order' | 'risk' | 'title') => {
@@ -2889,6 +2889,25 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                       <Bookmark className="w-4 h-4" />
                                     )}
                                   </button>
+                                    {isSearchingSimilarity[clause.id] ? (
+                                      <button disabled className="p-2 rounded bg-purple-100 text-purple-700 opacity-50">
+                                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleFindSimilarClauses(clause.id, clause.originalText)}
+                                        className="p-2 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                                        title="Find Similar Industry Clauses"
+                                        aria-label="Find similar clauses in LEDGAR knowledge base"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                                        </svg>
+                                      </button>
+                                    )}
                                   {(clause.riskLevel === 'critical' || clause.riskLevel === 'high') && (
                                     <button
                                       onClick={() => generateNegotiationScript(clause.title)}
@@ -2923,7 +2942,6 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                 </div>
                               </div>
                               
-                              {/* Continue with the rest of the clause rendering... */}
                               <div className="mb-4">
                                 <p className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2">Contractual Language</p>
                                 <p className="text-sm text-stone-600 italic bg-stone-50 p-4 border-l-2 border-stone-300 font-serif leading-relaxed">
@@ -2938,36 +2956,92 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                 </p>
                               </div>
                               
-                              {/* Similar Clauses Detection */}
-                              {similarClauses.has(clause.id) && similarClauses.get(clause.id)!.length > 0 && (
+                              {/* Similar Industry Clauses Detection (ML Retrieval) */}
+                              {similarClauses[clause.id] && similarClauses[clause.id].length > 0 && (
                                 <div className="mb-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 p-4 rounded">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  <div className="flex items-center gap-2 mb-4 border-b border-purple-200 pb-2">
+                                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
-                                    <p className="text-xs text-purple-900 uppercase tracking-wider font-semibold">AI Detected Similar Clauses</p>
+                                    <p className="text-sm text-purple-900 uppercase tracking-wider font-bold">Industry Standard Clauses (LEDGAR)</p>
                                   </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {similarClauses.get(clause.id)!.map(similarId => {
-                                      const similarClause = analysis.clauses.find(c => c.id === similarId);
-                                      if (!similarClause) return null;
+                                  <div className="flex flex-col gap-3">
+                                    {similarClauses[clause.id].map((similarClause: any, idx: number) => {
+                                      const fairness = clause.fairnessScore || 50;
+                                      const yourRisk = 100 - fairness;
+                                      const delta = similarClause.corpusStats ? Math.round(yourRisk - similarClause.corpusStats.medianRisk) : 0;
                                       return (
-                                        <button
-                                          key={similarId}
-                                          onClick={() => scrollToSection(`clause-${similarId}`)}
-                                          className="text-xs px-3 py-1.5 bg-white border border-purple-300 text-purple-700 hover:bg-purple-100 hover:border-purple-500 transition-colors rounded-full flex items-center gap-1"
-                                        >
-                                          <span className="font-medium">{similarClause.title.length > 30 ? similarClause.title.substring(0, 30) + '...' : similarClause.title}</span>
-                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                          </svg>
-                                        </button>
+                                        <div key={idx} className="bg-white p-3 rounded border border-purple-100 shadow-sm relative">
+                                          <div className="absolute top-3 right-3 flex items-center gap-2">
+                                            <span className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded">{similarClause.similarityScore}% Match</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <h5 className="text-xs font-bold text-purple-800">{similarClause.category}</h5>
+                                            {similarClause.source && (
+                                              <span className="text-[10px] text-stone-400 font-medium">({similarClause.source})</span>
+                                            )}
+                                          </div>
+                                          <p className="text-sm text-stone-700 italic font-serif mt-2 mb-3">"{similarClause.text}"</p>
+                                          
+                                          {/* Explainability Reason */}
+                                          <div className="bg-stone-50 rounded border border-stone-200 p-3 mt-3">
+                                            <p className="text-[10px] uppercase font-bold text-stone-500 mb-1">Semantic Match Reason</p>
+                                            <p className="text-xs text-stone-700">{getReason(similarClause.category)}</p>
+                                          </div>
+
+                                          {/* Clause Risk Benchmarking */}
+                                          {similarClause.corpusStats && (
+                                            <div className="bg-stone-50 rounded border border-stone-200 p-4 mt-3">
+                                              <div className="flex items-center justify-between mb-4">
+                                                <p className="text-[10px] uppercase font-bold text-stone-500">Clause Risk Benchmarking</p>
+                                                <span className="text-[10px] font-bold text-stone-400 bg-stone-200 px-2 py-0.5 rounded-full">{similarClause.corpusStats.sampleSize} clauses</span>
+                                              </div>
+                                              
+                                              <div className="mt-6 mb-8">
+                                                <div className="relative w-full h-1.5 bg-stone-200 rounded">
+                                                  {/* Highlight range between min and max */}
+                                                  <div className="absolute top-0 h-full bg-stone-300 rounded" style={{ left: `${similarClause.corpusStats.minRisk}%`, width: `${similarClause.corpusStats.maxRisk - similarClause.corpusStats.minRisk}%` }}></div>
+                                                  
+                                                  {/* Min Label */}
+                                                  <div className="absolute -top-5 -translate-x-1/2 text-[10px] font-bold text-stone-500" style={{ left: `${similarClause.corpusStats.minRisk}%` }}>{similarClause.corpusStats.minRisk}</div>
+                                                  
+                                                  {/* Max Label */}
+                                                  <div className="absolute -top-5 -translate-x-1/2 text-[10px] font-bold text-stone-500" style={{ left: `${similarClause.corpusStats.maxRisk}%` }}>{similarClause.corpusStats.maxRisk}</div>
+                                                  
+                                                  {/* Median Marker */}
+                                                  <div className="absolute top-1/2 -translate-y-1/2 -ml-0.5 w-1 h-3 bg-stone-500" style={{ left: `${similarClause.corpusStats.medianRisk}%` }}></div>
+                                                  <div className="absolute -top-5 -translate-x-1/2 text-[10px] font-bold text-stone-800" style={{ left: `${similarClause.corpusStats.medianRisk}%` }}>{similarClause.corpusStats.medianRisk}</div>
+
+                                                  {/* Your Clause Marker */}
+                                                  <div className="absolute top-2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[6px] border-b-purple-600" style={{ left: `${yourRisk}%` }}></div>
+                                                  <div className="absolute top-4 -translate-x-1/2 text-[10px] font-bold text-purple-700 whitespace-nowrap" style={{ left: `${yourRisk}%` }}>Your {yourRisk}</div>
+                                                </div>
+                                              </div>
+                                              
+                                              <div className="flex justify-between items-center text-xs border-t border-stone-200 pt-3">
+                                                <div className="flex gap-4">
+                                                  <div>
+                                                    <span className="text-stone-400 font-medium mr-1">Median:</span>
+                                                    <span className="font-bold text-stone-700">{similarClause.corpusStats.medianRisk}</span>
+                                                  </div>
+                                                  <div>
+                                                    <span className="text-stone-400 font-medium mr-1">Yours:</span>
+                                                    <span className="font-bold text-stone-700">{yourRisk}</span>
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <span className="text-stone-400 font-medium mr-1">Delta:</span>
+                                                  <span className={`font-bold ${delta > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                    {delta > 0 ? '+' : ''}{delta}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
                                       );
                                     })}
                                   </div>
-                                  <p className="text-xs text-purple-600 mt-2 italic">
-                                    These clauses share similar language and may be related
-                                  </p>
                                 </div>
                               )}
                               

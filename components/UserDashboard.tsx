@@ -234,10 +234,12 @@ export default function UserDashboard() {
     const [contractTypes, setContractTypes] = useState<any[]>([]);
     const [highestRiskContracts, setHighestRiskContracts] = useState<any[]>([]);
     const [riskTrends, setRiskTrends] = useState<any[]>([]);
+    const [contractClusters, setContractClusters] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         setIsLoaded(true);
+        // Fetch dashboard data
         fetch('/api/dashboard')
             .then(res => res.json())
             .then(data => {
@@ -255,6 +257,16 @@ export default function UserDashboard() {
                 }
             })
             .catch(err => console.error("Failed to load dashboard data:", err));
+
+        // Fetch ML Clusters
+        fetch('/api/ml/contract-clusters')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setContractClusters(data.clusters || []);
+                }
+            })
+            .catch(console.error);
     }, []);
 
     return (
@@ -378,6 +390,42 @@ export default function UserDashboard() {
                                 })}
                             </div>
                         </div>
+
+                        {/* ML Contract Clusters */}
+                        {contractClusters.length > 0 && (
+                            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-200 overflow-hidden">
+                                <div className="px-5 py-4 border-b border-indigo-200 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                        <h2 className="text-lg font-bold text-indigo-900">Portfolio Risk Segmentation</h2>
+                                    </div>
+                                    <span className="text-xs font-bold text-indigo-500 bg-white px-2 py-1 border border-indigo-100 rounded uppercase">K-Means Feature Analysis</span>
+                                </div>
+                                <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {contractClusters.map((cluster, i) => (
+                                        <div key={i} className="bg-white border-2 border-indigo-100 p-4 rounded hover:border-indigo-400 transition-colors">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="text-sm font-bold text-indigo-900">{cluster.name}</h3>
+                                                <span className="text-xs font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">{cluster.contracts.length} docs</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {cluster.contracts.slice(0, 3).map((c: any) => (
+                                                    <div key={c.id} className="text-xs text-stone-600 truncate flex items-center gap-1">
+                                                        <FileText className="w-3 h-3 text-stone-400 flex-shrink-0" />
+                                                        {c.fileName}
+                                                    </div>
+                                                ))}
+                                                {cluster.contracts.length > 3 && (
+                                                    <div className="text-xs text-indigo-500 font-medium pt-1">+ {cluster.contracts.length - 3} more</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Risk Trends Line Chart */}
                         <div className="bg-white border-2 border-stone-200 overflow-hidden">
