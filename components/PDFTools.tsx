@@ -263,7 +263,21 @@ export default function PDFTools() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      setUploadedFiles(Array.from(files));
+      const fileArray = Array.from(files);
+      const maxSize = 20 * 1024 * 1024; // 20MB
+      
+      const oversizedFiles = fileArray.filter(f => f.size > maxSize);
+      if (oversizedFiles.length > 0) {
+        setError(`Some files exceed 20MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`);
+        return;
+      }
+      
+      if (fileArray.length > 10) {
+        setError('Maximum 10 files can be uploaded at once.');
+        return;
+      }
+
+      setUploadedFiles(fileArray);
       setError(null);
     }
   };
@@ -354,8 +368,13 @@ export default function PDFTools() {
       if (!response.ok) {
         let errMessage = 'Processing failed';
         try {
-          const errorData = await response.json();
-          errMessage = errorData.error || errMessage;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errMessage = errorData.error || errMessage;
+          } else {
+            errMessage = `Server error (${response.status}): The API endpoint might not be available yet.`;
+          }
         } catch {
           errMessage = `Server returned status ${response.status}`;
         }

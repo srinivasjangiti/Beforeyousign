@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import {
     FileText,
     Upload,
@@ -228,8 +229,11 @@ function getActivityIcon(type: ActivityItem['type']) {
 export default function UserDashboard() {
     const [summary, setSummary] = useState<ContractSummary>(sampleSummary);
     const [activities, setActivities] = useState<ActivityItem[]>(sampleActivities);
-    const [deadlines] = useState<UpcomingDeadline[]>(sampleDeadlines);
     const [healthScore, setHealthScore] = useState<number>(76);
+    const [riskDistribution, setRiskDistribution] = useState<any[]>([]);
+    const [contractTypes, setContractTypes] = useState<any[]>([]);
+    const [highestRiskContracts, setHighestRiskContracts] = useState<any[]>([]);
+    const [riskTrends, setRiskTrends] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -240,6 +244,10 @@ export default function UserDashboard() {
                 if (data.success) {
                     setSummary(data.summary);
                     setHealthScore(data.healthScore);
+                    setRiskDistribution(data.riskDistribution || []);
+                    setContractTypes(data.contractTypes || []);
+                    setHighestRiskContracts(data.highestRiskContracts || []);
+                    setRiskTrends(data.riskTrends || []);
                     setActivities(data.activities.map((a: any) => ({
                         ...a,
                         timestamp: new Date(a.timestamp)
@@ -309,29 +317,29 @@ export default function UserDashboard() {
 
                             <div className="bg-white border-2 border-stone-200 p-4 hover:border-stone-900 transition-colors">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Clock className="w-4 h-4 text-stone-500" />
-                                    <span className="text-xs text-stone-500 font-medium">Pending</span>
+                                    <AlertTriangle className="w-4 h-4 text-stone-500" />
+                                    <span className="text-xs text-stone-500 font-medium">Total Flags</span>
                                 </div>
-                                <p className="text-2xl font-bold text-stone-900">{summary.pending}</p>
-                                <p className="text-xs text-stone-500">need review</p>
+                                <p className="text-2xl font-bold text-stone-900">{(summary as any).totalRedFlags || 0}</p>
+                                <p className="text-xs text-stone-500">detected across all</p>
                             </div>
 
                             <div className="bg-white border-2 border-stone-200 p-4 hover:border-stone-900 transition-colors">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Calendar className="w-4 h-4 text-stone-500" />
-                                    <span className="text-xs text-stone-500 font-medium">Expiring</span>
+                                    <span className="text-xs text-stone-500 font-medium">Recent</span>
                                 </div>
-                                <p className="text-2xl font-bold text-stone-900">{summary.expiringSoon}</p>
-                                <p className="text-xs text-stone-500">in 30 days</p>
+                                <p className="text-2xl font-bold text-stone-900">{summary.recentlyAnalyzed}</p>
+                                <p className="text-xs text-stone-500">analyzed in 7 days</p>
                             </div>
 
                             <div className="bg-white border-2 border-stone-200 p-4 hover:border-stone-900 transition-colors">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="w-4 h-4 text-stone-500" />
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
                                     <span className="text-xs text-stone-500 font-medium">High Risk</span>
                                 </div>
                                 <p className="text-2xl font-bold text-stone-900">{summary.highRisk}</p>
-                                <p className="text-xs text-stone-500">contracts</p>
+                                <p className="text-xs text-stone-500">score {'>'}= 70</p>
                             </div>
                         </div>
 
@@ -343,11 +351,13 @@ export default function UserDashboard() {
                                     <h2 className="text-lg font-bold text-stone-900">Recent Activity</h2>
                                 </div>
                                 <Link href="/contracts" className="text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1">
-                                    View All <ArrowRight className="w-3 h-3" />
+                                    View Repository <ArrowRight className="w-3 h-3" />
                                 </Link>
                             </div>
                             <div className="divide-y divide-stone-100">
-                                {activities.map((activity) => {
+                                {activities.length === 0 ? (
+                                    <div className="p-8 text-center text-stone-500 text-sm">No recent activity</div>
+                                ) : activities.map((activity) => {
                                     const Icon = getActivityIcon(activity.type);
                                     return (
                                         <div key={activity.id} className="px-5 py-4 hover:bg-stone-50 transition-colors">
@@ -368,6 +378,34 @@ export default function UserDashboard() {
                                 })}
                             </div>
                         </div>
+
+                        {/* Risk Trends Line Chart */}
+                        <div className="bg-white border-2 border-stone-200 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-stone-700" />
+                                    <h2 className="text-lg font-bold text-stone-900">Historical Risk Trends</h2>
+                                </div>
+                            </div>
+                            <div className="p-5 h-64">
+                                {riskTrends.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={riskTrends}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#78716c', fontSize: 12}} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{fill: '#78716c', fontSize: 12}} domain={[0, 100]} />
+                                            <Tooltip 
+                                                contentStyle={{backgroundColor: '#1c1917', border: 'none', borderRadius: '8px', color: '#fff'}}
+                                                itemStyle={{color: '#fff'}}
+                                            />
+                                            <Line type="monotone" dataKey="score" stroke="#1c1917" strokeWidth={3} dot={{r: 4, fill: '#1c1917'}} activeDot={{r: 6}} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-stone-500 text-sm">No trend data available</div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Column - Health Score & Deadlines */}
@@ -384,25 +422,36 @@ export default function UserDashboard() {
                                     <div className="flex items-center justify-between text-xs mb-2">
                                         <span className="text-stone-500">Risk Distribution</span>
                                     </div>
-                                    <div className="flex gap-1 h-2 overflow-hidden">
-                                        <div className="bg-stone-400 w-[60%]" title="Low Risk" />
-                                        <div className="bg-stone-600 w-[25%]" title="Medium Risk" />
-                                        <div className="bg-stone-900 w-[15%]" title="High Risk" />
+                                    <div className="flex gap-1 h-2 overflow-hidden mb-2">
+                                        {riskDistribution.map((rd, i) => (
+                                            <div 
+                                                key={i} 
+                                                style={{ width: `${summary.total > 0 ? (rd.value / summary.total) * 100 : 0}%`, backgroundColor: rd.color }} 
+                                                title={rd.name} 
+                                            />
+                                        ))}
+                                        {summary.total === 0 && <div className="bg-stone-200 w-full" />}
                                     </div>
-                                    <div className="flex justify-between mt-2 text-[10px] text-stone-400">
-                                        <span>Low (60%)</span>
-                                        <span>Med (25%)</span>
-                                        <span>High (15%)</span>
+                                    <div className="flex justify-between mt-2 text-[10px] text-stone-500">
+                                        {riskDistribution.map((rd, i) => (
+                                            <span key={i}>{rd.name.split(' ')[0]} ({rd.value})</span>
+                                        ))}
+                                        {summary.total === 0 && <span>No data</span>}
+                                    </div>
+                                </div>
+                                <div className="mt-6 w-full pt-4 border-t border-stone-100">
+                                    <div className="text-xs text-stone-500 mb-2">Top Contract Types</div>
+                                    <div className="space-y-2">
+                                        {contractTypes.length === 0 ? <div className="text-xs text-stone-400">No data available</div> : null}
+                                        {contractTypes.map((ct, i) => (
+                                            <div key={i} className="flex justify-between text-sm">
+                                                <span className="text-stone-700 truncate">{ct.name}</span>
+                                                <span className="font-bold text-stone-900">{ct.value}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
-                            <Link
-                                href="/analytics"
-                                className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-sm font-medium text-stone-700 transition-colors"
-                            >
-                                <BarChart3 className="w-4 h-4" />
-                                View Analytics
-                            </Link>
                         </div>
 
                         {/* Upcoming Deadlines */}
@@ -417,7 +466,7 @@ export default function UserDashboard() {
                                 </Link>
                             </div>
                             <div className="divide-y divide-stone-100">
-                                {deadlines.map((deadline) => (
+                                {sampleDeadlines.map((deadline) => (
                                     <div key={deadline.id} className="px-5 py-4 hover:bg-stone-50 transition-colors">
                                         <div className="flex items-center justify-between mb-1">
                                             <p className="text-sm font-semibold text-stone-900 truncate">{deadline.contractName}</p>

@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIContractDrafter, ContractDraftRequest } from '@/lib/ai-contract-drafter';
-import { auth } from '@/auth';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json();
     const { action, ...data } = body;
 
@@ -18,6 +15,23 @@ export async function POST(req: NextRequest) {
       case 'draft': {
         const request: ContractDraftRequest = data;
         const result = await drafter.draftContract(request);
+
+        // MVP Persistence: Save draft into AnalyzedContract
+        try {
+          await prisma.analyzedContract.create({
+            data: {
+              fileName: `${request.contractType} (Draft)`,
+              contractType: 'Draft',
+              riskScore: 0,
+              summary: JSON.stringify(result), // Store full draft
+              redFlagsCount: 0,
+              clausesCount: result.sections?.length || 0,
+            }
+          });
+        } catch (e) {
+          console.error("Draft persistence failed", e);
+        }
+
         return NextResponse.json(result);
       }
 

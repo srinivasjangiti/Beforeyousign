@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Upload, FileText, MessageSquare, Bot, User as UserIcon, X, Sparkles, AlertCircle, CheckCircle, HelpCircle, ShieldAlert } from 'lucide-react';
+import { Send, Upload, FileText, MessageSquare, Bot, User as UserIcon, X, CheckCircle } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -42,6 +42,20 @@ export default function ContractChat() {
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
+    
+    const maxSize = 10485760; // 10MB default
+    if (file.size > maxSize) {
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `Sorry, this file is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). The maximum size is 10MB.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
+      setUploading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -294,7 +308,7 @@ export default function ContractChat() {
       </div>
 
       {/* Suggested Questions */}
-      {messages.length <= 2 && !contract && (
+      {messages.length <= 2 && contract && (
         <div className="px-6 py-2.5 flex-shrink-0 border-t border-stone-200">
           <div className="max-w-5xl mx-auto">
             <p className="text-xs font-medium text-stone-600 mb-2">Suggested questions:</p>

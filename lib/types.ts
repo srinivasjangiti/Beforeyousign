@@ -6,6 +6,7 @@ export interface ContractAnalysis {
   clauses: ClauseAnalysis[];
   redFlags: RedFlag[];
   recommendations: string[];
+  suggestedActions?: string[];
   insights?: ContractInsights;
   metadata: ContractMetadata;
   industryBenchmark?: IndustryBenchmark;

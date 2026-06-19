@@ -21,7 +21,7 @@ export class ContractAnalyzer {
     const baseDelay = 750;
     // Increased limit to support full analysis of large contracts (up to ~25k tokens).
     const maxPromptChars = Math.max(3000, Number.parseInt(process.env.ANALYZE_MAX_PROMPT_CHARS || '100000', 10));
-    const modelOutputTokens = Math.max(512, Number.parseInt(process.env.ANALYZE_MAX_OUTPUT_TOKENS || '1024', 10));
+    const modelOutputTokens = Math.max(512, Number.parseInt(process.env.ANALYZE_MAX_OUTPUT_TOKENS || '4096', 10));
     const trimmedContractText = contractText.length > maxPromptChars
       ? `${contractText.slice(0, maxPromptChars)}\n\n[Contract text truncated for faster analysis due to deployment limits]`
       : contractText;
@@ -134,6 +134,8 @@ INSTRUCTIONS:
 - plainLanguage: max 100 characters
 - concerns: max 2 items, max 80 chars each
 - recommendations: max 5 items, max 100 chars each
+- recommendations: max 5 items, max 100 chars each
+- suggestedActions: max 3 concrete immediate next steps, max 80 chars each
 - commonAlternatives: max 2 items, max 80 chars each
 - fallbackPositions: max 2 items, max 80 chars each
 - marketPrecedents: max 2 items, max 60 chars each
@@ -180,6 +182,7 @@ REQUIRED OUTPUT FORMAT (return ONLY this JSON, no markdown, no extra text):
     }
   ],
   "recommendations": ["rec 1", "rec 2", "rec 3"],
+  "suggestedActions": ["action 1", "action 2", "action 3"],
   "insights": {
     "missingClauses": ["clause type 1"],
     "contradictions": [{"clause1": "c1", "clause2": "c2", "issue": "brief issue"}],
@@ -232,7 +235,12 @@ REQUIRED OUTPUT FORMAT (return ONLY this JSON, no markdown, no extra text):
         affectedClauses: flag.affectedClauses || [],
         recommendation: flag.recommendation || '',
       })) as RedFlag[],
-      recommendations: (data.recommendations as string[]) || [],
+      recommendations: Array.isArray(data.recommendations)
+        ? data.recommendations.map(String)
+        : [],
+      suggestedActions: Array.isArray(data.suggestedActions)
+        ? data.suggestedActions.map(String)
+        : [],
       insights: {
         missingClauses: ((data.insights as Record<string, unknown>)?.missingClauses as string[]) || [],
         contradictions: (((data.insights as Record<string, unknown>)?.contradictions as Array<Record<string, unknown>>) || []).map((c: Record<string, unknown>) => ({
@@ -262,7 +270,7 @@ REQUIRED OUTPUT FORMAT (return ONLY this JSON, no markdown, no extra text):
         overall: this.calculateOverallConfidence(data),
         riskScoreConfidence: this.calculateRiskConfidence(data),
         clauseAnalysisConfidence: this.calculateClauseConfidence(data),
-        model: 'Llama 3.1 405B Instruct',
+        model: 'NVIDIA NIM Hosted Model',
         modelVersion: NVIDIA_MODELS.primary,
         analysisDate: new Date().toISOString(),
         notes: this.generateConfidenceNotes(data),
@@ -335,7 +343,7 @@ REQUIRED OUTPUT FORMAT (return ONLY this JSON, no markdown, no extra text):
       notes.push(`Industry comparison data available for ${clausesWithBenchmark} clause${clausesWithBenchmark === 1 ? '' : 's'}`);
     }
     
-    notes.push('Analysis performed by Llama 3.1 405B Instruct - state-of-the-art reasoning model');
+    notes.push('Analysis performed by state-of-the-art reasoning model');
     notes.push('Your contract data is not stored or used for model training');
     
     return notes;

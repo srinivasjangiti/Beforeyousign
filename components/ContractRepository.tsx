@@ -1,23 +1,70 @@
 'use client';
 
-import { FolderOpen, Search, Filter, Plus, Eye, Download, Edit, Trash2, Calendar, DollarSign, AlertTriangle, CheckCircle, Clock, MoreVertical, ArrowUpDown, FileText, Star } from 'lucide-react';
-import { useState } from 'react';
+import { FolderOpen, Search, Filter, Plus, Eye, Download, Edit, Trash2, Calendar, DollarSign, AlertTriangle, CheckCircle, Clock, MoreVertical, ArrowUpDown, FileText, Star, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface ContractData {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  risk: string;
+  date: string;
+  summary: string;
+  redFlagsCount: number;
+  clausesCount: number;
+  riskScore: number;
+}
 
 export default function ContractRepository() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [filterRisk, setFilterRisk] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [contracts, setContracts] = useState<ContractData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedContract, setSelectedContract] = useState<ContractData | null>(null);
+  const router = useRouter();
 
-  const contracts = [
-    { id: 1, name: 'Adobe SaaS Agreement', type: 'SaaS', status: 'Active', value: '$59.99/mo', valueNum: 720, risk: 'Low', date: '2024-01-15', renewal: '2025-01-15', tags: ['Recurring', 'Software'], party: 'Adobe Inc.' },
-    { id: 2, name: 'Tech Corp Employment Contract', type: 'Employment', status: 'Active', value: '$120K/yr', valueNum: 120000, risk: 'Medium', date: '2023-06-01', renewal: '2025-06-01', tags: ['Annual', 'Full-time'], party: 'Tech Corp' },
-    { id: 3, name: 'StartupXYZ Freelance Agreement', type: 'Freelance', status: 'Active', value: '$5K', valueNum: 5000, risk: 'High', date: '2024-11-20', renewal: '2025-11-20', tags: ['Project-based'], party: 'StartupXYZ' },
-    { id: 4, name: 'Office Lease Agreement', type: 'Lease', status: 'Active', value: '$3K/mo', valueNum: 36000, risk: 'Medium', date: '2023-09-01', renewal: '2025-09-01', tags: ['Commercial', 'Recurring'], party: 'Property LLC' },
-    { id: 5, name: 'NDA - Tech Partner', type: 'NDA', status: 'Pending', value: '-', valueNum: 0, risk: 'Low', date: '2024-12-10', renewal: '2026-12-10', tags: ['Confidential'], party: 'Tech Partner Inc.' },
-    { id: 6, name: 'Service Contract - Expired', type: 'Service', status: 'Expired', value: '$1.2K', valueNum: 1200, risk: 'Low', date: '2023-05-15', renewal: '2024-05-15', tags: ['One-time'], party: 'Service Provider' },
-  ];
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      async function fetchContracts() {
+        setIsLoading(true);
+        try {
+          const params = new URLSearchParams({
+            search: searchQuery,
+            risk: filterRisk,
+            sort: sortBy
+          });
+          const res = await fetch(`/api/contracts?${params.toString()}`);
+          const data = await res.json();
+          if (data.success) {
+            const mapped = data.contracts.map((c: any) => ({
+              id: c.id,
+              name: c.fileName,
+              type: c.contractType || 'Document',
+              status: 'Analyzed',
+              risk: c.riskScore >= 70 ? 'High' : c.riskScore >= 40 ? 'Medium' : 'Low',
+              date: new Date(c.createdAt).toLocaleDateString(),
+              summary: c.summary,
+              redFlagsCount: c.redFlagsCount,
+              clausesCount: c.clausesCount,
+              riskScore: c.riskScore,
+            }));
+            setContracts(mapped);
+          }
+        } catch (error) {
+          console.error('Failed to fetch contracts', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      fetchContracts();
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery, filterRisk, sortBy]);
 
   const riskColors = {
     Low:    { bg: 'bg-stone-100', text: 'text-stone-600', border: 'border-stone-300', dot: 'bg-stone-400' },
@@ -25,34 +72,9 @@ export default function ContractRepository() {
     High:   { bg: 'bg-stone-900', text: 'text-white',     border: 'border-stone-900', dot: 'bg-stone-900' },
   };
 
-  const statusColors = {
-    Active:  { bg: 'bg-stone-900', text: 'text-white',     icon: CheckCircle },
-    Pending: { bg: 'bg-stone-100', text: 'text-stone-700', icon: Clock },
-    Expired: { bg: 'bg-stone-100', text: 'text-stone-500', icon: AlertTriangle },
-  };
+  const filteredContracts = contracts; // Server-side handles filtering and sorting
 
-  const filteredContracts = contracts
-    .filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.party.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || c.status === filterStatus;
-      const matchesRisk = filterRisk === 'all' || c.risk === filterRisk;
-      return matchesSearch && matchesStatus && matchesRisk;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'date') return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortBy === 'value') return b.valueNum - a.valueNum;
-      if (sortBy === 'risk') {
-        const riskOrder = { High: 3, Medium: 2, Low: 1 };
-        return riskOrder[b.risk as keyof typeof riskOrder] - riskOrder[a.risk as keyof typeof riskOrder];
-      }
-      return 0;
-    });
-
-  const activeContracts = contracts.filter(c => c.status === 'Active').length;
   const highRiskContracts = contracts.filter(c => c.risk === 'High').length;
-  const totalValue = contracts.reduce((sum, c) => sum + c.valueNum, 0);
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -61,16 +83,16 @@ export default function ContractRepository() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-stone-900">My Contracts</h1>
-            <button className="flex items-center gap-2 px-6 py-3 bg-stone-900 text-white font-semibold hover:bg-stone-800 transition-all">
+            <a href="/analyze" className="flex items-center gap-2 px-6 py-3 bg-stone-900 text-white font-semibold hover:bg-stone-800 transition-all">
               <Plus className="w-5 h-5" />
-              Add Contract
-            </button>
+              New Analysis
+            </a>
           </div>
-          <p className="text-stone-600">Manage and track all your contracts in one place</p>
+          <p className="text-stone-600">Manage and track all your analyzed contracts in one place</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white border border-stone-200 p-6 hover:border-stone-900 transition-colors">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-stone-100 flex items-center justify-center">
@@ -78,19 +100,8 @@ export default function ContractRepository() {
               </div>
               <span className="text-xs font-semibold text-stone-500 uppercase">Total</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900 mb-1">{contracts.length}</p>
-            <p className="text-sm text-stone-600">Total Contracts</p>
-          </div>
-
-          <div className="bg-white border border-stone-200 p-6 hover:border-stone-900 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-stone-100 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-stone-900" />
-              </div>
-              <span className="text-xs font-semibold text-stone-500 uppercase">Active</span>
-            </div>
-            <p className="text-3xl font-bold text-stone-900 mb-1">{activeContracts}</p>
-            <p className="text-sm text-stone-600">Active Contracts</p>
+            <p className="text-3xl font-bold text-stone-900 mb-1">{isLoading ? '-' : contracts.length}</p>
+            <p className="text-sm text-stone-600">Total Analyzed</p>
           </div>
 
           <div className="bg-white border border-stone-200 p-6 hover:border-stone-900 transition-colors">
@@ -100,19 +111,19 @@ export default function ContractRepository() {
               </div>
               <span className="text-xs font-semibold text-stone-900 uppercase">High Risk</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900 mb-1">{highRiskContracts}</p>
+            <p className="text-3xl font-bold text-stone-900 mb-1">{isLoading ? '-' : highRiskContracts}</p>
             <p className="text-sm text-stone-600">Needs Attention</p>
           </div>
 
           <div className="bg-white border border-stone-200 p-6 hover:border-stone-900 transition-colors">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-stone-100 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-stone-900" />
+                <CheckCircle className="w-5 h-5 text-stone-900" />
               </div>
-              <span className="text-xs font-semibold text-stone-500 uppercase">Value</span>
+              <span className="text-xs font-semibold text-stone-500 uppercase">Status</span>
             </div>
-            <p className="text-3xl font-bold text-stone-900 mb-1">${(totalValue / 1000).toFixed(0)}K</p>
-            <p className="text-sm text-stone-600">Total Portfolio Value</p>
+            <p className="text-3xl font-bold text-stone-900 mb-1">Active</p>
+            <p className="text-sm text-stone-600">Repository Online</p>
           </div>
         </div>
 
@@ -126,69 +137,43 @@ export default function ContractRepository() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search contracts, parties, types..."
+                  placeholder="Search contracts or types..."
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all"
                 />
               </div>
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-5 py-3 border-2 font-semibold transition-all ${showFilters ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-300 hover:bg-stone-50'
-                }`}
+              className={`flex items-center gap-2 px-5 py-3 border-2 font-semibold transition-all ${showFilters ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-300 hover:bg-stone-50'}`}
             >
               <Filter className="w-4 h-4" />
               Filters
-              {(filterStatus !== 'all' || filterRisk !== 'all') && (
-                <span className="w-2 h-2 bg-stone-900" />
-              )}
+              {filterRisk !== 'all' && <span className="w-2 h-2 bg-stone-900" />}
             </button>
-            <button className="flex items-center gap-2 px-5 py-3 border border-stone-300 font-semibold hover:bg-stone-50 transition-colors">
+            <button
+              onClick={() => setSortBy(sortBy === 'date' ? 'risk' : 'date')}
+              className="flex items-center gap-2 px-5 py-3 border border-stone-300 font-semibold hover:bg-stone-50 transition-colors"
+            >
               <ArrowUpDown className="w-4 h-4" />
-              Sort: {sortBy === 'date' ? 'Date' : sortBy === 'value' ? 'Value' : 'Risk'}
+              Sort: {sortBy === 'date' ? 'Date' : 'Risk Score'}
             </button>
           </div>
 
           {/* Filter Options */}
           {showFilters && (
             <div className="pt-4 border-t border-stone-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700 mb-2">Status</label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    aria-label="Filter contracts by status"
-                    className="w-full px-4 py-2 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="Active">Active</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Expired">Expired</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-stone-700 mb-2">Risk Level</label>
                   <select
                     value={filterRisk}
                     onChange={(e) => setFilterRisk(e.target.value)}
-                    aria-label="Filter contracts by risk level"
                     className="w-full px-4 py-2 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900"
                   >
                     <option value="all">All Risk Levels</option>
                     <option value="Low">Low Risk</option>
                     <option value="Medium">Medium Risk</option>
                     <option value="High">High Risk</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700 mb-2">Sort By</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)} aria-label="Sort contracts by" className="w-full px-4 py-2 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  >
-                    <option value="date">Date Added</option>
-                    <option value="value">Contract Value</option>
-                    <option value="risk">Risk Level</option>
                   </select>
                 </div>
               </div>
@@ -205,95 +190,88 @@ export default function ContractRepository() {
                   <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Contract</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Value</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Risk</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Risk Score</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-stone-700 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-stone-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-200">
-                {filteredContracts.map((contract) => {
-                  const StatusIcon = statusColors[contract.status as keyof typeof statusColors].icon;
-                  const riskColor = riskColors[contract.risk as keyof typeof riskColors];
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-stone-500">
+                      Loading contracts...
+                    </td>
+                  </tr>
+                ) : filteredContracts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-stone-500">
+                      <Search className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+                      <p className="font-semibold text-stone-600">No contracts found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredContracts.map((contract) => {
+                    const riskColor = riskColors[contract.risk as keyof typeof riskColors];
 
-                  return (
-                    <tr key={contract.id} className="hover:bg-stone-50 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
-                            <FolderOpen className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-stone-900 mb-1">{contract.name}</p>
-                            <p className="text-xs text-stone-500">with {contract.party}</p>
-                            <div className="flex gap-1 mt-1">
-                              {contract.tags.map((tag, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-stone-100 text-stone-600 text-xs rounded">
-                                  {tag}
-                                </span>
-                              ))}
+                    return (
+                      <tr 
+                        key={contract.id} 
+                        onClick={() => router.push(`/contracts/${contract.id}`)}
+                        className="hover:bg-stone-50 transition-colors group cursor-pointer"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                              <FolderOpen className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-stone-900 mb-1 max-w-xs truncate" title={contract.name}>{contract.name}</p>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-stone-700">{contract.type}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <StatusIcon className="w-4 h-4" />
-                          <span className={`px-3 py-1 text-xs font-bold rounded-full ${statusColors[contract.status as keyof typeof statusColors].bg} ${statusColors[contract.status as keyof typeof statusColors].text}`}>
-                            {contract.status}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-bold text-stone-900">{contract.value}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${riskColor.dot}`} />
-                          <span className={`px-3 py-1 text-xs font-bold rounded-lg border-2 ${riskColor.bg} ${riskColor.text} ${riskColor.border}`}>
-                            {contract.risk}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm text-stone-600">
-                          <Calendar className="w-4 h-4" />
-                          {contract.date}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <button aria-label="View contract" className="p-2 hover:bg-blue-100 rounded-lg transition-colors group/btn">
-                            <Eye className="w-4 h-4 text-stone-600 group-hover/btn:text-blue-600" />
-                          </button>
-                          <button aria-label="Edit contract" className="p-2 hover:bg-amber-100 rounded-lg transition-colors group/btn">
-                            <Edit className="w-4 h-4 text-stone-600 group-hover/btn:text-amber-600" />
-                          </button>
-                          <button aria-label="Download contract" className="p-2 hover:bg-green-100 rounded-lg transition-colors group/btn">
-                            <Download className="w-4 h-4 text-stone-600 group-hover/btn:text-green-600" />
-                          </button>
-                          <button aria-label="More options" className="p-2 hover:bg-stone-200 rounded-lg transition-colors group/btn">
-                            <MoreVertical className="w-4 h-4 text-stone-600" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold text-stone-700">{contract.type}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700">
+                              Analyzed
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${riskColor.dot}`} />
+                            <span className={`px-3 py-1 text-xs font-bold rounded-lg border-2 ${riskColor.bg} ${riskColor.text} ${riskColor.border}`}>
+                              {contract.riskScore} / 100
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-sm text-stone-600">
+                            <Calendar className="w-4 h-4" />
+                            {contract.date}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => setSelectedContract(contract)}
+                              aria-label="View analysis"
+                              className="p-2 hover:bg-blue-100 rounded-lg transition-colors group/btn"
+                            >
+                              <Eye className="w-4 h-4 text-stone-600 group-hover/btn:text-blue-600" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
-
-          {filteredContracts.length === 0 && (
-            <div className="text-center py-12">
-              <Search className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-              <p className="text-stone-500 font-semibold">No contracts found</p>
-              <p className="text-sm text-stone-400 mt-1">Try adjusting your filters or search query</p>
-            </div>
-          )}
         </div>
 
         {/* Results Count */}
@@ -303,6 +281,62 @@ export default function ContractRepository() {
           </div>
         )}
       </div>
+
+      {/* Analysis Details Modal */}
+      {selectedContract && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-stone-200 flex justify-between items-center bg-stone-50">
+              <h2 className="text-xl font-bold text-stone-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-stone-600" />
+                {selectedContract.name}
+              </h2>
+              <button 
+                onClick={() => setSelectedContract(null)}
+                className="text-stone-500 hover:text-stone-900 font-bold p-2"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-stone-50 p-4 border border-stone-200 rounded-lg">
+                  <div className="text-sm text-stone-500 mb-1">Risk Score</div>
+                  <div className="text-2xl font-bold text-stone-900">{selectedContract.riskScore}</div>
+                </div>
+                <div className="bg-stone-50 p-4 border border-stone-200 rounded-lg">
+                  <div className="text-sm text-stone-500 mb-1">Red Flags</div>
+                  <div className="text-2xl font-bold text-stone-900">{selectedContract.redFlagsCount}</div>
+                </div>
+                <div className="bg-stone-50 p-4 border border-stone-200 rounded-lg">
+                  <div className="text-sm text-stone-500 mb-1">Clauses Detected</div>
+                  <div className="text-2xl font-bold text-stone-900">{selectedContract.clausesCount}</div>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-bold text-stone-900 mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-stone-600" />
+                  Executive Summary
+                </h3>
+                <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 text-stone-700 whitespace-pre-wrap">
+                  {selectedContract.summary}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-stone-200 bg-stone-50 flex justify-end gap-3">
+              <button 
+                onClick={() => setSelectedContract(null)}
+                className="px-6 py-2 border border-stone-300 font-semibold text-stone-700 hover:bg-stone-100 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

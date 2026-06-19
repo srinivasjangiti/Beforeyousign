@@ -36,7 +36,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
   const [playbookContent, setPlaybookContent] = useState('');
   const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'markdown' | 'json' | 'html' | 'pdf'>('pdf');
+  const [exportFormat, setExportFormat] = useState<'markdown' | 'json' | 'html' | 'pdf' | 'docx'>('pdf');
   const [exportOptions, setExportOptions] = useState({
     includeBookmarks: true,
     includeNotes: true,
@@ -85,6 +85,9 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
   const [showPlaybookGenerator, setShowPlaybookGenerator] = useState(false);
   const [isGeneratingPlaybookFull, setIsGeneratingPlaybookFull] = useState(false);
   const [generatedPlaybook, setGeneratedPlaybook] = useState<any>(null);
+
+  // NEW: Executive Report
+  const [showExecutiveReport, setShowExecutiveReport] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -227,6 +230,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
         setShowChat(false);
         setShowShareModal(false);
         setShowShortcuts(false);
+        setShowExecutiveReport(false);
       },
     },
     {
@@ -735,43 +739,66 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
 
   const handleEnhancedExport = async () => {
     try {
-      const { exportAsMarkdown, exportAsJSON, exportAsHTML } = await import('@/lib/enhanced-export');
+      const { exportAsMarkdown, exportAsJSON, exportAsHTML, exportAsDOCX } = await import('@/lib/enhanced-export');
 
-      let content: string;
-      let mimeType: string;
-      let extension: string;
+      let content: string = '';
+      let mimeType: string = '';
+      let extension: string = '';
+      let blob: Blob | null = null;
 
-      const fullOptions = { ...exportOptions, format: exportFormat };
+      const fullOptions = { ...exportOptions, format: exportFormat } as any;
 
       if (exportFormat === 'markdown') {
         content = exportAsMarkdown(analysis, clauseNotes, fullOptions);
         mimeType = 'text/markdown';
         extension = 'md';
+        blob = new Blob([content], { type: mimeType });
       } else if (exportFormat === 'json') {
         content = exportAsJSON(analysis, clauseNotes, fullOptions);
         mimeType = 'application/json';
         extension = 'json';
+        blob = new Blob([content], { type: mimeType });
       } else if (exportFormat === 'pdf') {
-        // Use HTML for PDF export (user can print to PDF)
+        // Use HTML for PDF export and trigger print
         content = exportAsHTML(analysis, clauseNotes, fullOptions);
-        mimeType = 'text/html';
-        extension = 'html';
+        const printWindow = window.open('', '', 'height=800,width=800');
+        if (printWindow) {
+          printWindow.document.write(content);
+          printWindow.document.close();
+          // Timeout to ensure resources load before printing
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+          showToast(`✓ Opened PDF print dialog`, 'success');
+          setTimeout(() => setShowExportModal(false), 400);
+          return;
+        } else {
+          // Fallback if popup blocked
+          mimeType = 'text/html';
+          extension = 'html';
+          blob = new Blob([content], { type: mimeType });
+        }
+      } else if (exportFormat === 'docx') {
+        blob = await exportAsDOCX(analysis, clauseNotes, fullOptions);
+        extension = 'docx';
       } else {
         content = exportAsHTML(analysis, clauseNotes, fullOptions);
         mimeType = 'text/html';
         extension = 'html';
+        blob = new Blob([content], { type: mimeType });
       }
 
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const timestamp = new Date().toISOString().split('T')[0];
-      a.download = `analysis-${timestamp}-${analysis.metadata.fileName}.${extension}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().split('T')[0];
+        a.download = `analysis-${timestamp}-${analysis.metadata.fileName}.${extension}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
 
-      showToast(`\u2713 Successfully exported as ${exportFormat.toUpperCase()}`, 'success');
+      showToast(`✓ Successfully exported as ${exportFormat.toUpperCase()}`, 'success');
       // Close modal after successful export
       setTimeout(() => setShowExportModal(false), 400);
     } catch (error) {
@@ -935,6 +962,86 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                     <span className="text-stone-700">Previous Clause</span>
                     <kbd className="px-3 py-1 bg-stone-100 border border-stone-300 rounded text-sm font-mono">Ctrl+↑</kbd>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Executive Report Modal */}
+          {showExecutiveReport && (
+            <div className="fixed inset-0 bg-stone-900/50 z-[70] flex justify-center overflow-y-auto" onClick={() => setShowExecutiveReport(false)}>
+              <div className="bg-white w-full max-w-4xl min-h-screen p-12 md:p-16 my-8 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setShowExecutiveReport(false)} className="absolute top-8 right-8 hover:bg-stone-100 p-2 rounded-full no-print">
+                  <X className="w-6 h-6" />
+                </button>
+                <button onClick={() => window.print()} className="absolute top-8 right-20 hover:bg-stone-100 p-2 rounded-full no-print">
+                  <Printer className="w-6 h-6" />
+                </button>
+
+                <div className="mb-12 border-b-4 border-stone-900 pb-8">
+                  <p className="font-bold text-stone-500 uppercase tracking-widest mb-2">BeforeYouSign AI</p>
+                  <h1 className="text-4xl font-bold text-stone-900 mb-4">Executive Briefing</h1>
+                  <p className="text-xl text-stone-600 font-mono">{analysis.metadata.fileName}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-12">
+                  <div className="bg-stone-50 p-6 border-l-4 border-stone-900">
+                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-widest mb-2">Overall Risk Exposure</h3>
+                    <p className={`text-4xl font-bold ${analysis.riskScore >= 70 ? 'text-red-600' : analysis.riskScore >= 40 ? 'text-orange-500' : 'text-green-600'}`}>
+                      {analysis.riskScore}/100
+                    </p>
+                    <p className="text-stone-600 mt-2">{getRiskLabel(analysis.riskScore)}</p>
+                  </div>
+                  <div className="bg-stone-50 p-6 border-l-4 border-stone-900">
+                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-widest mb-2">Critical Issues</h3>
+                    <p className="text-4xl font-bold text-stone-900">{analysis.redFlags.length}</p>
+                    <p className="text-stone-600 mt-2">Flagged for immediate review</p>
+                  </div>
+                </div>
+
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-stone-900 mb-4 pb-2 border-b border-stone-200">Executive Summary</h2>
+                  <div className="prose max-w-none text-stone-800 text-lg leading-relaxed">
+                    {analysis.summary.split('\n').map((paragraph, idx) => (
+                      <p key={idx} className="mb-4">{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {analysis.redFlags.length > 0 && (
+                  <div className="mb-12">
+                    <h2 className="text-2xl font-bold text-stone-900 mb-4 pb-2 border-b border-stone-200">Top Risks & Business Impact</h2>
+                    <div className="space-y-6">
+                      {analysis.redFlags.slice(0, 5).map((flag, idx) => (
+                        <div key={idx} className="bg-red-50 p-6 border-l-4 border-red-500">
+                          <h4 className="font-bold text-stone-900 text-lg mb-2">{flag.title}</h4>
+                          <p className="text-stone-700 mb-3">{flag.description}</p>
+                          <div className="bg-white p-4 border border-red-200">
+                            <span className="font-bold text-sm text-stone-500 uppercase tracking-wider mb-1 block">Recommended Action</span>
+                            <p className="text-stone-800">{flag.recommendation}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {analysis.recommendations && analysis.recommendations.length > 0 && (
+                  <div className="mb-12">
+                    <h2 className="text-2xl font-bold text-stone-900 mb-4 pb-2 border-b border-stone-200">Strategic Recommendations</h2>
+                    <ul className="space-y-4">
+                      {analysis.recommendations.map((rec, idx) => (
+                        <li key={idx} className="flex gap-4 items-start">
+                          <CheckCircle className="w-6 h-6 text-stone-900 shrink-0" />
+                          <span className="text-lg text-stone-800">{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="text-center pt-12 border-t border-stone-200 mt-16 text-stone-400 text-sm font-mono">
+                  Generated by BeforeYouSign AI Analysis Engine • {new Date().toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -1277,10 +1384,10 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-semibold text-stone-700 mb-3">Export Format</label>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                       <button
                         onClick={() => setExportFormat('pdf')}
-                        className={`py-3 px-4 border-2 font-semibold transition-colors ${exportFormat === 'pdf'
+                        className={`py-3 px-2 text-sm md:px-4 border-2 font-semibold transition-colors ${exportFormat === 'pdf'
                           ? 'bg-stone-900 text-white border-stone-900'
                           : 'bg-white text-stone-900 border-stone-300 hover:border-stone-900'
                           }`}
@@ -1288,17 +1395,26 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                         📄 PDF
                       </button>
                       <button
-                        onClick={() => setExportFormat('markdown')}
-                        className={`py-3 px-4 border-2 font-semibold transition-colors ${exportFormat === 'markdown'
+                        onClick={() => setExportFormat('docx')}
+                        className={`py-3 px-2 text-sm md:px-4 border-2 font-semibold transition-colors ${exportFormat === 'docx'
                           ? 'bg-stone-900 text-white border-stone-900'
                           : 'bg-white text-stone-900 border-stone-300 hover:border-stone-900'
                           }`}
                       >
-                        📝 Markdown
+                        📝 DOCX
+                      </button>
+                      <button
+                        onClick={() => setExportFormat('markdown')}
+                        className={`py-3 px-2 text-sm md:px-4 border-2 font-semibold transition-colors ${exportFormat === 'markdown'
+                          ? 'bg-stone-900 text-white border-stone-900'
+                          : 'bg-white text-stone-900 border-stone-300 hover:border-stone-900'
+                          }`}
+                      >
+                        📝 MD
                       </button>
                       <button
                         onClick={() => setExportFormat('json')}
-                        className={`py-3 px-4 border-2 font-semibold transition-colors ${exportFormat === 'json'
+                        className={`py-3 px-2 text-sm md:px-4 border-2 font-semibold transition-colors ${exportFormat === 'json'
                           ? 'bg-stone-900 text-white border-stone-900'
                           : 'bg-white text-stone-900 border-stone-300 hover:border-stone-900'
                           }`}
@@ -1307,7 +1423,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                       </button>
                       <button
                         onClick={() => setExportFormat('html')}
-                        className={`py-3 px-4 border-2 font-semibold transition-colors ${exportFormat === 'html'
+                        className={`py-3 px-2 text-sm md:px-4 border-2 font-semibold transition-colors ${exportFormat === 'html'
                           ? 'bg-stone-900 text-white border-stone-900'
                           : 'bg-white text-stone-900 border-stone-300 hover:border-stone-900'
                           }`}
@@ -1869,6 +1985,14 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                 >
                   <Share2 className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
                   <span>Share</span>
+                </button>
+                <button
+                  onClick={() => setShowExecutiveReport(true)}
+                  className="group flex items-center gap-2 px-6 py-3 border-2 border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white transition-all duration-300"
+                  title="View Executive Report"
+                >
+                  <FileText className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                  <span>Executive Report</span>
                 </button>
                 <button
                   onClick={() => setShowExportModal(true)}
@@ -3125,19 +3249,42 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
           </div>
 
           {/* Recommendations Section */}
-          {analysis.recommendations.length > 0 && (
+          {(analysis.recommendations.length > 0 || (analysis.suggestedActions && analysis.suggestedActions.length > 0)) && (
             <div id="recommendations" className="bg-white border-2 border-stone-900 p-8">
-              <h3 className="text-3xl font-bold text-stone-900 mb-6 pb-4 border-b-2 border-stone-200">
-                Strategic Recommendations
-              </h3>
-              <ul className="space-y-4">
-                {analysis.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-4 border-l-2 border-stone-900 pl-6 py-2">
-                    <span className="text-stone-400 font-mono text-sm mt-1">{String(idx + 1).padStart(2, '0')}</span>
-                    <p className="text-stone-800 leading-relaxed flex-1">{rec}</p>
-                  </li>
-                ))}
-              </ul>
+              {analysis.recommendations.length > 0 && (
+                <div className="mb-10">
+                  <h3 className="text-3xl font-bold text-stone-900 mb-6 pb-4 border-b-2 border-stone-200">
+                    Strategic Recommendations
+                  </h3>
+                  <ul className="space-y-4">
+                    {analysis.recommendations.map((rec, idx) => (
+                      <li key={idx} className="flex items-start gap-4 border-l-2 border-stone-900 pl-6 py-2">
+                        <span className="text-stone-400 font-mono text-sm mt-1">{String(idx + 1).padStart(2, '0')}</span>
+                        <p className="text-stone-800 leading-relaxed flex-1">{rec}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {analysis.suggestedActions && analysis.suggestedActions.length > 0 && (
+                <div>
+                  <h3 className="text-3xl font-bold text-stone-900 mb-6 pb-4 border-b-2 border-stone-200 flex items-center gap-3">
+                    <CheckCircle className="w-8 h-8 text-stone-900" />
+                    Suggested Next Actions
+                  </h3>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysis.suggestedActions.map((action, idx) => (
+                      <li key={idx} className="bg-stone-50 border border-stone-200 p-6 flex items-start gap-4 hover:border-stone-900 transition-colors">
+                        <span className="bg-stone-900 text-white w-8 h-8 flex items-center justify-center font-bold shrink-0">
+                          {idx + 1}
+                        </span>
+                        <p className="text-stone-800 font-medium pt-1">{action}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 

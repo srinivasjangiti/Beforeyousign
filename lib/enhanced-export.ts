@@ -1,6 +1,7 @@
 // Enhanced export functionality with annotations
 
 import { ContractAnalysis, ClauseAnalysis } from './types';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, BorderStyle, WidthType } from 'docx';
 
 export interface ExportOptions {
   includeBookmarks?: boolean;
@@ -403,4 +404,164 @@ export function exportAsHTML(
 </html>`;
 
   return html;
+}
+
+/**
+ * Generate a true DOCX file blob
+ */
+export async function exportAsDOCX(
+  analysis: ContractAnalysis,
+  bookmarks: Map<string, string> = new Map(),
+  options: ExportOptions
+): Promise<Blob> {
+  const children: any[] = [];
+
+  // Title
+  children.push(
+    new Paragraph({
+      text: `Contract Analysis Report - ${analysis.metadata.fileName}`,
+      heading: HeadingLevel.TITLE,
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Analyzed: ", bold: true }),
+        new TextRun({ text: new Date(analysis.metadata.uploadedAt).toLocaleString() })
+      ]
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Risk Score: ", bold: true }),
+        new TextRun({ text: `${analysis.riskScore}/100` })
+      ]
+    }),
+    new Paragraph({ text: "" })
+  );
+
+  // Executive Summary
+  children.push(
+    new Paragraph({
+      text: "Executive Summary",
+      heading: HeadingLevel.HEADING_1,
+    }),
+    new Paragraph({ text: analysis.summary }),
+    new Paragraph({ text: "" })
+  );
+
+  // Red Flags
+  if (analysis.redFlags.length > 0) {
+    children.push(
+      new Paragraph({
+        text: `Red Flags (${analysis.redFlags.length})`,
+        heading: HeadingLevel.HEADING_1,
+      })
+    );
+    analysis.redFlags.forEach((flag, i) => {
+      children.push(
+        new Paragraph({
+          text: `${i + 1}. ${flag.title}`,
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({ text: `Severity: ${flag.severity.toUpperCase()}` }),
+        new Paragraph({ text: flag.description }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Recommendation: ", bold: true }),
+            new TextRun({ text: flag.recommendation })
+          ]
+        }),
+        new Paragraph({ text: "" })
+      );
+    });
+  }
+
+  // Clauses
+  let clausesToExport = analysis.clauses;
+  if (options.clauseFilter === 'bookmarked') {
+    clausesToExport = clausesToExport.filter(c => bookmarks.has(c.title));
+  } else if (options.clauseFilter === 'high-risk') {
+    clausesToExport = clausesToExport.filter(
+      c => c.riskLevel === 'critical' || c.riskLevel === 'high'
+    );
+  }
+
+  children.push(
+    new Paragraph({
+      text: "Clause Analysis",
+      heading: HeadingLevel.HEADING_1,
+    })
+  );
+
+  clausesToExport.forEach((clause, i) => {
+    const isBookmarked = bookmarks.has(clause.title);
+    const bookmarkText = isBookmarked ? "📌 " : "";
+
+    children.push(
+      new Paragraph({
+        text: `${i + 1}. ${bookmarkText}${clause.title} (${clause.riskLevel.toUpperCase()})`,
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Original Text: ", bold: true }),
+          new TextRun({ text: clause.originalText, italics: true })
+        ]
+      }),
+      new Paragraph({ text: clause.plainLanguage })
+    );
+
+    if (clause.concerns.length > 0) {
+      children.push(new Paragraph({ children: [new TextRun({ text: "Concerns:", bold: true })] }));
+      clause.concerns.forEach(c => {
+        children.push(new Paragraph({ text: `• ${c}`, bullet: { level: 0 } }));
+      });
+    }
+
+    if (clause.recommendation) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Recommendation: ", bold: true }),
+            new TextRun({ text: clause.recommendation })
+          ]
+        })
+      );
+    }
+
+    if (options.includeNotes && bookmarks.has(clause.title)) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Notes: ", bold: true }),
+            new TextRun({ text: bookmarks.get(clause.title) || '' })
+          ]
+        })
+      );
+    }
+    
+    children.push(new Paragraph({ text: "" }));
+  });
+
+  // Overall Recommendations
+  if (analysis.recommendations.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Overall Recommendations",
+        heading: HeadingLevel.HEADING_1,
+      })
+    );
+    analysis.recommendations.forEach(rec => {
+      children.push(new Paragraph({ text: `• ${rec}`, bullet: { level: 0 } }));
+    });
+  }
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: children,
+      },
+    ],
+  });
+
+  return Packer.toBlob(doc);
 }

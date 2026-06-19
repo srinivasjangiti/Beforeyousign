@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
               fileName: file.name,
               contractType: (analysisData.contractType as string) || 'Unknown',
               riskScore: analysis.riskScore || 0,
-              summary: analysis.summary || '',
+              summary: JSON.stringify(analysis), // Store full snapshot for history
               redFlagsCount: analysis.redFlags?.length || 0,
               clausesCount: analysis.clauses?.length || 0,
             }
