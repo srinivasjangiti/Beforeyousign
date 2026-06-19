@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "diagnostics": "node scripts/diagnostics.js",
+    "health-check": "node scripts/health-check.js",
+    "export-data": "node scripts/export-data.js",
+    "benchmark": "node scripts/benchmark.js"
+  }
+}

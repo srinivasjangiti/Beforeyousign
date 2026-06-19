@@ -1,0 +1,406 @@
+// Enhanced export functionality with annotations
+
+import { ContractAnalysis, ClauseAnalysis } from './types';
+
+export interface ExportOptions {
+  includeBookmarks?: boolean;
+  includeNotes?: boolean;
+  includeNegotiationScripts?: boolean;
+  clauseFilter?: 'all' | 'bookmarked' | 'high-risk';
+  format: 'markdown' | 'json' | 'html' | 'pdf';
+}
+
+export interface EnhancedExportData {
+  analysis: ContractAnalysis;
+  bookmarks?: Map<string, string>; // clauseTitle -> note
+  exportedAt: string;
+  exportOptions: ExportOptions;
+}
+
+/**
+ * Generate comprehensive markdown export with annotations
+ */
+export function exportAsMarkdown(
+  analysis: ContractAnalysis,
+  bookmarks: Map<string, string> = new Map(),
+  options: ExportOptions
+): string {
+  let md = `# Contract Analysis Report\n\n`;
+  md += `**Contract:** ${analysis.metadata.fileName}\n\n`;
+  md += `**Analyzed:** ${new Date(analysis.metadata.uploadedAt).toLocaleString()}\n\n`;
+  md += `**Exported:** ${new Date().toLocaleString()}\n\n`;
+
+  if (analysis.confidence) {
+    md += `**Analysis Confidence:** ${analysis.confidence.overall}%\n\n`;
+  }
+
+  md += `---\n\n`;
+
+  // Executive Summary
+  md += `## Executive Summary\n\n`;
+  md += `${analysis.summary}\n\n`;
+  md += `### Risk Assessment\n\n`;
+  md += `**Overall Risk Score:** ${analysis.riskScore}/100\n\n`;
+
+  const riskLevel =
+    analysis.riskScore >= 75 ? '🔴 CRITICAL - High Risk' :
+      analysis.riskScore >= 50 ? '🟠 SIGNIFICANT - Moderate Risk' :
+        analysis.riskScore >= 25 ? '🟡 CAUTION - Low-Moderate Risk' :
+          '🟢 ACCEPTABLE - Low Risk';
+
+  md += `**Assessment:** ${riskLevel}\n\n`;
+  md += `---\n\n`;
+
+  // Red Flags
+  if (analysis.redFlags.length > 0) {
+    md += `## 🚨 Red Flags (${analysis.redFlags.length})\n\n`;
+
+    const criticalFlags = analysis.redFlags.filter(f => f.severity === 'critical');
+    const dangerFlags = analysis.redFlags.filter(f => f.severity === 'danger');
+    const warningFlags = analysis.redFlags.filter(f => f.severity === 'warning');
+
+    if (criticalFlags.length > 0) {
+      md += `### Critical Issues (${criticalFlags.length})\n\n`;
+      criticalFlags.forEach((flag, i) => {
+        md += `#### ${i + 1}. ${flag.title}\n\n`;
+        md += `**Type:** ${flag.type.replace(/_/g, ' ').toUpperCase()}\n\n`;
+        md += `**Description:** ${flag.description}\n\n`;
+        md += `**Recommendation:** ${flag.recommendation}\n\n`;
+        md += `**Affected Clauses:** ${flag.affectedClauses.join(', ')}\n\n`;
+        md += `---\n\n`;
+      });
+    }
+
+    if (dangerFlags.length > 0) {
+      md += `### High Priority Issues (${dangerFlags.length})\n\n`;
+      dangerFlags.forEach((flag, i) => {
+        md += `#### ${i + 1}. ${flag.title}\n\n`;
+        md += `${flag.description}\n\n`;
+        md += `**Recommendation:** ${flag.recommendation}\n\n`;
+      });
+      md += `\n`;
+    }
+
+    if (warningFlags.length > 0) {
+      md += `### Warnings (${warningFlags.length})\n\n`;
+      warningFlags.forEach((flag, i) => {
+        md += `${i + 1}. **${flag.title}** - ${flag.description}\n`;
+      });
+      md += `\n`;
+    }
+  }
+
+  // Filter clauses based on options
+  let clausesToExport = analysis.clauses;
+  if (options.clauseFilter === 'bookmarked' && options.includeBookmarks) {
+    clausesToExport = clausesToExport.filter(c => bookmarks.has(c.title));
+  } else if (options.clauseFilter === 'high-risk') {
+    clausesToExport = clausesToExport.filter(
+      c => c.riskLevel === 'critical' || c.riskLevel === 'high'
+    );
+  }
+
+  // Clauses
+  md += `## Clause Analysis (${clausesToExport.length})\n\n`;
+
+  clausesToExport.forEach((clause, i) => {
+    const isBookmarked = bookmarks.has(clause.title);
+    const bookmark = isBookmarked ? '📌 ' : '';
+
+    md += `### ${i + 1}. ${bookmark}${clause.title}\n\n`;
+    md += `**Risk Level:** ${clause.riskLevel.toUpperCase()} | **Category:** ${clause.category}\n\n`;
+
+    md += `#### Original Contract Language\n\n`;
+    md += `> ${clause.originalText}\n\n`;
+
+    md += `#### Plain Language Explanation\n\n`;
+    md += `${clause.plainLanguage}\n\n`;
+
+    if (clause.concerns.length > 0) {
+      md += `#### Concerns\n\n`;
+      clause.concerns.forEach(concern => {
+        md += `- ${concern}\n`;
+      });
+      md += `\n`;
+    }
+
+    if (clause.recommendation) {
+      md += `#### Recommendation\n\n`;
+      md += `${clause.recommendation}\n\n`;
+    }
+
+    // Include notes if available
+    if (options.includeNotes && isBookmarked) {
+      const note = bookmarks.get(clause.title);
+      if (note) {
+        md += `#### 📝 Your Notes\n\n`;
+        md += `${note}\n\n`;
+      }
+    }
+
+    md += `---\n\n`;
+  });
+
+  // Recommendations
+  md += `## Overall Recommendations\n\n`;
+  analysis.recommendations.forEach((rec, i) => {
+    md += `${i + 1}. ${rec}\n`;
+  });
+  md += `\n---\n\n`;
+
+  // Footer
+  md += `*This report was generated by BeforeYouSign AI Contract Analyzer.*\n\n`;
+  md += `*⚠️ Disclaimer: This analysis is for informational purposes only and does not constitute legal advice. Please consult with a qualified attorney before making any legal decisions.*\n`;
+
+  return md;
+}
+
+/**
+ * Generate comprehensive JSON export
+ */
+export function exportAsJSON(
+  analysis: ContractAnalysis,
+  bookmarks: Map<string, string> = new Map(),
+  options: ExportOptions
+): string {
+  const exportData: any = {
+    exportedAt: new Date().toISOString(),
+    exportOptions: options,
+    analysis: {
+      summary: analysis.summary,
+      riskScore: analysis.riskScore,
+      metadata: analysis.metadata,
+      redFlags: analysis.redFlags,
+      recommendations: analysis.recommendations,
+      confidence: analysis.confidence,
+    },
+  };
+
+  // Filter and add clauses
+  let clausesToExport = analysis.clauses;
+  if (options.clauseFilter === 'bookmarked') {
+    clausesToExport = clausesToExport.filter(c => bookmarks.has(c.title));
+  } else if (options.clauseFilter === 'high-risk') {
+    clausesToExport = clausesToExport.filter(
+      c => c.riskLevel === 'critical' || c.riskLevel === 'high'
+    );
+  }
+
+  exportData.analysis.clauses = clausesToExport.map(clause => ({
+    ...clause,
+    bookmarked: bookmarks.has(clause.title),
+    note: options.includeNotes ? bookmarks.get(clause.title) : undefined,
+  }));
+
+  // Add bookmark summary if included
+  if (options.includeBookmarks && bookmarks.size > 0) {
+    exportData.bookmarks = {
+      count: bookmarks.size,
+      items: Array.from(bookmarks.entries()).map(([title, note]) => ({
+        clauseTitle: title,
+        note,
+      })),
+    };
+  }
+
+  return JSON.stringify(exportData, null, 2);
+}
+
+/**
+ * Generate HTML report with styling
+ */
+export function exportAsHTML(
+  analysis: ContractAnalysis,
+  bookmarks: Map<string, string> = new Map(),
+  options: ExportOptions
+): string {
+  const riskColor =
+    analysis.riskScore >= 75 ? '#dc2626' :
+      analysis.riskScore >= 50 ? '#ea580c' :
+        analysis.riskScore >= 25 ? '#ca8a04' :
+          '#16a34a';
+
+  let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Analysis - ${analysis.metadata.fileName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6; 
+      color: #1c1917; 
+      background: #fafaf9;
+      padding: 2rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 3rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #1c1917; border-bottom: 3px solid #1c1917; padding-bottom: 1rem; }
+    h2 { font-size: 1.8rem; margin: 2rem 0 1rem; color: #1c1917; border-bottom: 2px solid #e7e5e4; padding-bottom: 0.5rem; }
+    h3 { font-size: 1.4rem; margin: 1.5rem 0 0.75rem; color: #44403c; }
+    h4 { font-size: 1.1rem; margin: 1rem 0 0.5rem; color: #57534e; }
+    .metadata { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; padding: 1rem; background: #f5f5f4; border-radius: 8px; }
+    .metadata-item { font-size: 0.9rem; }
+    .metadata-label { font-weight: 600; color: #57534e; }
+    .risk-score { 
+      display: inline-block; 
+      font-size: 3rem; 
+      font-weight: 700; 
+      padding: 1rem 2rem; 
+      background: ${riskColor}; 
+      color: white; 
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .clause { 
+      margin: 2rem 0; 
+      padding: 1.5rem; 
+      border: 2px solid #e7e5e4; 
+      border-radius: 8px;
+      page-break-inside: avoid;
+    }
+    .clause.critical { border-color: #dc2626; background: #fef2f2; }
+    .clause.high { border-color: #ea580c; background: #fff7ed; }
+    .clause.medium { border-color: #ca8a04; background: #fefce8; }
+    .clause.bookmarked { border-left: 5px solid #d97706; }
+    .clause-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .risk-badge { 
+      display: inline-block; 
+      padding: 0.25rem 0.75rem; 
+      border-radius: 4px; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      text-transform: uppercase;
+    }
+    .risk-critical { background: #dc2626; color: white; }
+    .risk-high { background: #ea580c; color: white; }
+    .risk-medium { background: #ca8a04; color: white; }
+    .risk-low { background: #16a34a; color: white; }
+    .original-text { 
+      background: #f5f5f4; 
+      padding: 1rem; 
+      border-left: 3px solid #78716c; 
+      font-style: italic; 
+      margin: 1rem 0;
+      font-family: Georgia, serif;
+    }
+    .red-flag { 
+      margin: 1rem 0; 
+      padding: 1rem; 
+      border-left: 4px solid #dc2626; 
+      background: #fef2f2;
+    }
+    .note { 
+      background: #fffbeb; 
+      border: 2px solid #fbbf24; 
+      padding: 1rem; 
+      border-radius: 4px; 
+      margin: 1rem 0;
+    }
+    .footer { margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e7e5e4; font-size: 0.9rem; color: #78716c; }
+    ul { margin-left: 1.5rem; margin-top: 0.5rem; }
+    li { margin: 0.5rem 0; }
+    @media print {
+      body { padding: 0; background: white; }
+      .container { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Contract Analysis Report</h1>
+    
+    <div class="metadata">
+      <div class="metadata-item">
+        <div class="metadata-label">Contract:</div>
+        <div>${analysis.metadata.fileName}</div>
+      </div>
+      <div class="metadata-item">
+        <div class="metadata-label">Analyzed:</div>
+        <div>${new Date(analysis.metadata.uploadedAt).toLocaleString()}</div>
+      </div>
+      <div class="metadata-item">
+        <div class="metadata-label">Exported:</div>
+        <div>${new Date().toLocaleString()}</div>
+      </div>
+      ${analysis.confidence ? `
+      <div class="metadata-item">
+        <div class="metadata-label">Confidence:</div>
+        <div>${analysis.confidence.overall}%</div>
+      </div>` : ''}
+    </div>
+
+    <h2>Executive Summary</h2>
+    <p>${analysis.summary}</p>
+    
+    <h3>Risk Assessment</h3>
+    <div class="risk-score">${analysis.riskScore}/100</div>
+
+    ${analysis.redFlags.length > 0 ? `
+    <h2>🚨 Red Flags (${analysis.redFlags.length})</h2>
+    ${analysis.redFlags.map(flag => `
+      <div class="red-flag">
+        <h4>${flag.title}</h4>
+        <p><strong>Severity:</strong> ${flag.severity.toUpperCase()}</p>
+        <p>${flag.description}</p>
+        <p><strong>Recommendation:</strong> ${flag.recommendation}</p>
+      </div>
+    `).join('')}
+    ` : ''}
+
+    <h2>Clause Analysis</h2>
+    ${analysis.clauses.map((clause, i) => {
+    const isBookmarked = bookmarks.has(clause.title);
+    const note = bookmarks.get(clause.title);
+
+    return `
+      <div class="clause ${clause.riskLevel} ${isBookmarked ? 'bookmarked' : ''}">
+        <div class="clause-header">
+          <h3>${i + 1}. ${isBookmarked ? '📌 ' : ''}${clause.title}</h3>
+          <span class="risk-badge risk-${clause.riskLevel}">${clause.riskLevel}</span>
+        </div>
+        
+        <h4>Original Contract Language</h4>
+        <div class="original-text">"${clause.originalText}"</div>
+        
+        <h4>Plain Language Explanation</h4>
+        <p>${clause.plainLanguage}</p>
+        
+        ${clause.concerns.length > 0 ? `
+        <h4>Concerns</h4>
+        <ul>
+          ${clause.concerns.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+        ` : ''}
+        
+        ${clause.recommendation ? `
+        <h4>Recommendation</h4>
+        <p>${clause.recommendation}</p>
+        ` : ''}
+        
+        ${options.includeNotes && note ? `
+        <div class="note">
+          <h4>📝 Your Notes</h4>
+          <p>${note}</p>
+        </div>
+        ` : ''}
+      </div>
+      `;
+  }).join('')}
+
+    <h2>Overall Recommendations</h2>
+    <ul>
+      ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+    </ul>
+
+    <div class="footer">
+      <p><em>This report was generated by BeforeYouSign AI Contract Analyzer.</em></p>
+      <p><strong>⚠️ Disclaimer:</strong> This analysis is for informational purposes only and does not constitute legal advice. Please consult with a qualified attorney before making any legal decisions.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return html;
+}

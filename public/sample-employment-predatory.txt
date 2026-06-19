@@ -1,0 +1,68 @@
+EMPLOYMENT AGREEMENT
+
+This Employment Agreement ("Agreement") is entered into as of January 1, 2025, between TechCorp Industries, Inc. ("Company") and Employee ("Employee").
+
+1. POSITION AND DUTIES
+Employee shall serve as Software Engineer and shall perform such duties as assigned by Company. Employee agrees to devote full time, attention, and best efforts to Company business. Employee shall not engage in any other employment or business activity without prior written consent.
+
+2. COMPENSATION
+Employee shall receive an annual salary of $85,000, payable bi-weekly. Company reserves the right to modify compensation at any time without notice. Any bonuses are discretionary and not guaranteed.
+
+3. INTELLECTUAL PROPERTY ASSIGNMENT
+Employee hereby assigns to Company all right, title, and interest in any and all inventions, discoveries, ideas, improvements, software code, designs, processes, techniques, know-how, and trade secrets, whether patentable or not, conceived, developed, or reduced to practice by Employee, either alone or jointly with others, during employment and for a period of two (2) years after termination, regardless of whether conceived during working hours or using Company resources.
+
+4. NON-COMPETE COVENANT
+During employment and for a period of three (3) years following termination for any reason, Employee shall not, directly or indirectly, engage in, own, manage, operate, control, be employed by, participate in, or be connected in any manner with any business that is competitive with Company's business anywhere in the United States, Canada, Europe, or Asia. This includes any software development, technology services, or consulting activities.
+
+5. CONFIDENTIALITY
+Employee acknowledges access to Company's confidential information and agrees to maintain strict confidentiality during employment and perpetually after termination. Confidential information includes, but is not limited to, all business information, client data, source code, business strategies, financial information, personnel information, and any other information not publicly available.
+
+6. TERMINATION
+Company may terminate this Agreement at any time, with or without cause, with or without notice. Employee may only terminate this Agreement by providing one hundred twenty (120) days written notice. Upon termination by Employee without proper notice, Employee shall forfeit all accrued but unpaid compensation, vacation pay, and benefits.
+
+7. NO GUARANTEED EMPLOYMENT
+This Agreement does not guarantee employment for any specific period. Employment is at-will and may be terminated by Company at any time for any reason or no reason.
+
+8. DISPUTE RESOLUTION
+Any dispute arising under this Agreement shall be resolved exclusively through binding arbitration administered by an arbitrator selected by Company. Employee waives all rights to jury trial or court proceedings. Arbitration shall take place in Company's headquarters city. Employee shall pay all arbitration costs and fees, including Company's attorney fees if Company prevails. The arbitration shall be confidential and Employee may not disclose its existence or results.
+
+9. INDEMNIFICATION
+Employee agrees to indemnify, defend, and hold harmless Company from any and all claims, damages, liabilities, costs, and expenses (including attorney fees) arising from Employee's performance of duties or breach of this Agreement, regardless of Company's negligence or fault.
+
+10. AMENDMENTS
+Company may modify this Agreement at any time by providing written notice to Employee. Continued employment after such notice constitutes acceptance of modifications.
+
+11. LIABILITY WAIVER
+Employee waives any claims against Company for workplace injuries, discrimination, harassment, wrongful termination, or any other employment-related claims to the maximum extent permitted by law.
+
+12. WORK HOURS
+Employee shall work such hours as necessary to complete assigned duties. No overtime compensation shall be provided regardless of hours worked. Employee may be required to work evenings, weekends, and holidays without additional compensation.
+
+13. EQUIPMENT AND EXPENSES
+Employee shall provide own computer equipment and bear all home office expenses. Company shall not reimburse any work-related expenses unless pre-approved in writing.
+
+14. CONFIDENTIAL EMPLOYEE INVENTIONS
+Employee represents that Employee has disclosed all prior inventions, and agrees that any inventions not disclosed are hereby assigned to Company.
+
+15. NON-SOLICITATION
+For five (5) years following termination, Employee shall not directly or indirectly solicit, recruit, or hire any Company employee or contractor, nor solicit any Company client or customer.
+
+16. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between the parties. Any verbal promises or prior agreements are superseded by this Agreement.
+
+17. GOVERNING LAW AND VENUE
+This Agreement shall be governed by the laws of Delaware. Any legal action must be brought exclusively in Delaware courts, regardless of where Employee resides.
+
+18. SEVERABILITY
+If any provision is found unenforceable, the remaining provisions shall remain in full force and effect, and the unenforceable provision shall be modified to be enforceable to the maximum extent possible.
+
+19. ACKNOWLEDGMENT
+Employee acknowledges having read this Agreement, having had opportunity to consult with legal counsel (whether or not Employee chose to do so), and agrees to all terms voluntarily.
+
+
+_______________________          _______________________
+Employee Signature                Date
+
+
+_______________________          _______________________
+Company Representative            Date

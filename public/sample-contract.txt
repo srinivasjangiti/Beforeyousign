@@ -1,0 +1,82 @@
+FREELANCE WEB DEVELOPMENT AGREEMENT
+
+This Freelance Web Development Agreement ("Agreement") is entered into as of January 1, 2025 ("Effective Date") by and between:
+
+CLIENT: TechCorp Solutions Inc., a Delaware corporation with its principal place of business at 123 Business Ave, San Francisco, CA 94105 ("Client")
+
+DEVELOPER: John Doe, an individual residing at 456 Developer Street, Austin, TX 78701 ("Developer")
+
+1. SCOPE OF WORK
+Developer agrees to provide web development services as specified in Exhibit A attached hereto. Developer shall perform all services in a professional and workmanlike manner.
+
+2. COMPENSATION
+2.1 Client agrees to pay Developer a total fee of $15,000 for the services described in Section 1.
+2.2 Payment shall be made in three installments: 50% upon signing, 25% upon milestone completion, and 25% upon final delivery.
+2.3 All payments are non-refundable once work has commenced.
+
+3. INTELLECTUAL PROPERTY
+3.1 Developer hereby assigns, transfers, and conveys to Client all right, title, and interest in and to all work product, including but not limited to all intellectual property rights, copyrights, trademarks, patents, trade secrets, and any other proprietary rights.
+3.2 Developer agrees that all work product shall be considered "work made for hire" under U.S. copyright law.
+3.3 Developer waives all moral rights in the work product to the maximum extent permitted by law.
+
+4. CONFIDENTIALITY
+4.1 Developer agrees to maintain in strict confidence all Confidential Information received from Client.
+4.2 "Confidential Information" includes, but is not limited to, all information disclosed by Client, whether written, oral, electronic, or visual, and all information learned by Developer during the performance of services.
+4.3 Developer's confidentiality obligations shall survive termination of this Agreement indefinitely.
+
+5. NON-COMPETE AND NON-SOLICITATION
+5.1 During the term of this Agreement and for a period of three (3) years thereafter, Developer agrees not to directly or indirectly engage in any business that competes with Client's business anywhere in the United States.
+5.2 Developer shall not solicit, divert, or attempt to divert any client, customer, or prospective client of Client for a period of three (3) years after termination.
+
+6. TERM AND TERMINATION
+6.1 This Agreement shall commence on the Effective Date and continue until completion of services, unless earlier terminated as provided herein.
+6.2 Client may terminate this Agreement at any time, for any reason or no reason, upon written notice to Developer.
+6.3 Developer may only terminate this Agreement for material breach by Client, and only after providing 60 days' written notice and opportunity to cure.
+6.4 Upon termination by Developer, Developer shall forfeit all remaining unpaid compensation and shall immediately deliver all work product to Client.
+
+7. WARRANTIES AND REPRESENTATIONS
+7.1 Developer warrants that all work product shall be free from defects for a period of 30 days after delivery.
+7.2 EXCEPT AS EXPRESSLY PROVIDED HEREIN, DEVELOPER PROVIDES ALL SERVICES AND WORK PRODUCT "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+8. LIMITATION OF LIABILITY
+8.1 IN NO EVENT SHALL DEVELOPER'S LIABILITY TO CLIENT EXCEED THE TOTAL AMOUNT PAID BY CLIENT TO DEVELOPER UNDER THIS AGREEMENT.
+8.2 DEVELOPER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+9. INDEMNIFICATION
+Developer agrees to indemnify, defend, and hold harmless Client, its officers, directors, employees, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or relating to Developer's performance or non-performance under this Agreement.
+
+10. DISPUTE RESOLUTION
+10.1 Any dispute arising out of or relating to this Agreement shall be resolved exclusively through binding arbitration administered by JAMS in San Francisco, California.
+10.2 Developer waives any right to a jury trial.
+10.3 The prevailing party in any dispute shall be entitled to recover all reasonable attorneys' fees and costs from the non-prevailing party.
+
+11. AMENDMENTS
+Client may amend this Agreement at any time by providing written notice to Developer. Developer's continued performance of services after such notice shall constitute acceptance of the amendments.
+
+12. AUTOMATIC RENEWAL
+This Agreement shall automatically renew for successive one-year terms unless either party provides written notice of non-renewal at least 90 days prior to the end of the then-current term. Upon renewal, Client may modify the terms at its sole discretion.
+
+13. INDEPENDENT CONTRACTOR
+Developer is an independent contractor and not an employee of Client. Developer shall be responsible for all taxes, insurance, and other obligations relating to Developer's status as an independent contractor.
+
+14. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements, understandings, and communications, whether written or oral.
+
+15. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of laws principles.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+CLIENT: TechCorp Solutions Inc.
+By: _________________________
+Name: Sarah Johnson
+Title: CEO
+Date: January 1, 2025
+
+DEVELOPER: John Doe
+By: _________________________
+Date: _____________
+
+
+EXHIBIT A - SCOPE OF WORK
+[To be completed with specific project details]

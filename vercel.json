@@ -1,0 +1,19 @@
+{
+  "functions": {
+    "app/api/analyze/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/analyze-advanced/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/detect-clauses/route.ts": {
+      "maxDuration": 45
+    },
+    "app/api/negotiate/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/drafting/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

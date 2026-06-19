@@ -1,0 +1,478 @@
+// Prisma schema for BeforeYouSign
+// Run: npx prisma generate
+// Then: npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String?   @map("password_hash")
+  avatar        String?   @map("avatar_url")
+  role          String    @default("user")
+  riskTolerance String    @default("balanced") @map("risk_tolerance")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastLogin     DateTime? @map("last_login")
+  settings      Json      @default("{}")
+  metadata      Json      @default("{}")
+
+  accounts            Account[]
+  contracts           Contract[]
+  analyses            Analysis[]
+  comments            Comment[]
+  contractsShared     ContractCollaborator[]
+  activities          Activity[]
+  apiKeys             ApiKey[]
+  notifications       Notification[]
+  lawyerProfile       Lawyer?
+  consultationsAsClient Consultation[] @relation("ClientConsultations")
+  templates           Template[]
+  templatePurchases   TemplatePurchase[]
+  bookmarks           Bookmark[]
+  shareLinks          ShareLink[]
+  auditLogs           AuditLog[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  accessToken       String?  @map("access_token")
+  refreshToken      String?  @map("refresh_token")
+  expiresAt         BigInt?  @map("expires_at")
+  tokenType         String?  @map("token_type")
+  scope             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Contract {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  name           String
+  type           String?
+  content        String
+  fileUrl        String?   @map("file_url")
+  fileName       String?   @map("file_name")
+  fileSize       Int?      @map("file_size")
+  status         String    @default("draft")
+  currentVersion Int       @default(1) @map("current_version")
+  locked         Boolean   @default(false)
+  lockedBy       String?   @map("locked_by")
+  lockedAt       DateTime? @map("locked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  metadata       Json      @default("{}")
+
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyses      Analysis[]
+  versions      ContractVersion[]
+  comments      Comment[]
+  collaborators ContractCollaborator[]
+  workflows     ApprovalWorkflow[]
+  activities    Activity[]
+  consultations Consultation[]
+  bookmarks     Bookmark[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("contracts")
+}
+
+model Analysis {
+  id                  String   @id @default(cuid())
+  contractId          String   @map("contract_id")
+  userId              String   @map("user_id")
+  analysisType        String   @default("standard") @map("analysis_type")
+  summary             String?
+  riskScore           Int?     @map("risk_score")
+  redFlags            Json     @default("[]") @map("red_flags")
+  clauses             Json     @default("[]")
+  riskPredictions     Json     @default("[]") @map("risk_predictions")
+  complianceChecks    Json     @default("[]") @map("compliance_checks")
+  financialAnalysis   Json?    @map("financial_analysis")
+  benchmarking        Json?
+  negotiationInsights Json?    @map("negotiation_insights")
+  mlInsights          Json?    @map("ml_insights")
+  recommendations     Json     @default("[]")
+  processingTime      Int?     @map("processing_time")
+  modelVersion        String?  @map("model_version")
+  createdAt           DateTime @default(now()) @map("created_at")
+  metadata            Json     @default("{}")
+
+  contract   Contract    @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id])
+  shareLinks ShareLink[]
+
+  @@index([contractId])
+  @@index([userId])
+  @@map("analyses")
+}
+
+model ContractVersion {
+  id         String   @id @default(cuid())
+  contractId String   @map("contract_id")
+  version    Int
+  content    String
+  changes    Json     @default("[]")
+  authorId   String   @map("author_id")
+  message    String?
+  tags       Json     @default("[]")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, version])
+  @@index([contractId])
+  @@map("contract_versions")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  contractId String    @map("contract_id")
+  parentId   String?   @map("parent_id")
+  authorId   String    @map("author_id")
+  clauseId   String?   @map("clause_id")
+  position   Json?
+  content    String
+  mentions   Json      @default("[]")
+  resolved   Boolean   @default(false)
+  resolvedBy String?   @map("resolved_by")
+  resolvedAt DateTime? @map("resolved_at")
+  reactions  Json      @default("[]")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  contract Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id])
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([contractId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model ContractCollaborator {
+  id         String   @id @default(cuid())
+  contractId String   @map("contract_id")
+  userId     String   @map("user_id")
+  role       String
+  canEdit    Boolean  @default(false) @map("can_edit")
+  canComment Boolean  @default(true) @map("can_comment")
+  canApprove Boolean  @default(false) @map("can_approve")
+  canShare   Boolean  @default(false) @map("can_share")
+  canDelete  Boolean  @default(false) @map("can_delete")
+  addedBy    String?  @map("added_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, userId])
+  @@map("contract_collaborators")
+}
+
+model ApprovalWorkflow {
+  id           String    @id @default(cuid())
+  contractId   String    @map("contract_id")
+  name         String
+  stages       Json
+  currentStage Int       @default(0) @map("current_stage")
+  status       String    @default("in-review")
+  createdBy    String?   @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  completedAt  DateTime? @map("completed_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("approval_workflows")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  contractId  String?  @map("contract_id")
+  userId      String?  @map("user_id")
+  type        String
+  description String
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  contract Contract? @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id])
+
+  @@index([contractId])
+  @@index([userId])
+  @@map("activities")
+}
+
+model ApiKey {
+  id                 String    @id @default(cuid())
+  userId             String    @map("user_id")
+  name               String
+  keyHash            String    @unique @map("key_hash")
+  keyPrefix          String    @map("key_prefix")
+  permissions        Json      @default("{}")
+  rateLimitPerMinute Int       @default(60) @map("rate_limit_per_minute")
+  rateLimitPerHour   Int       @default(1000) @map("rate_limit_per_hour")
+  rateLimitPerDay    Int       @default(10000) @map("rate_limit_per_day")
+  lastUsedAt         DateTime? @map("last_used_at")
+  expiresAt          DateTime? @map("expires_at")
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  metadata           Json      @default("{}")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usage ApiUsage[]
+
+  @@map("api_keys")
+}
+
+model ApiUsage {
+  id           String   @id @default(cuid())
+  apiKeyId     String   @map("api_key_id")
+  endpoint     String
+  method       String
+  statusCode   Int?     @map("status_code")
+  responseTime Int?     @map("response_time")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([apiKeyId])
+  @@index([createdAt])
+  @@map("api_usage")
+}
+
+model Webhook {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  url             String
+  events          Json
+  secret          String
+  isActive        Boolean   @default(true) @map("is_active")
+  lastTriggeredAt DateTime? @map("last_triggered_at")
+  failureCount    Int       @default(0) @map("failure_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  metadata        Json      @default("{}")
+
+  deliveries WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id             String    @id @default(cuid())
+  webhookId      String    @map("webhook_id")
+  eventType      String    @map("event_type")
+  payload        Json
+  status         String
+  responseStatus Int?      @map("response_status")
+  responseBody   String?   @map("response_body")
+  attemptCount   Int       @default(0) @map("attempt_count")
+  nextRetryAt    DateTime? @map("next_retry_at")
+  deliveredAt    DateTime? @map("delivered_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_deliveries")
+}
+
+model Lawyer {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  barNumber        String?  @map("bar_number")
+  jurisdiction     String?
+  practiceAreas    Json     @default("[]") @map("practice_areas")
+  specializations  Json     @default("[]")
+  yearsExperience  Int?     @map("years_experience")
+  hourlyRate       Decimal? @map("hourly_rate") @db.Decimal(10, 2)
+  bio              String?
+  education        Json     @default("[]")
+  certifications   Json     @default("[]")
+  languages        Json     @default("[\"English\"]")
+  responseTime     String?  @map("response_time")
+  rating           Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount      Int      @default(0) @map("review_count")
+  consultationCount Int     @default(0) @map("consultation_count")
+  isVerified       Boolean  @default(false) @map("is_verified")
+  isFeatured       Boolean  @default(false) @map("is_featured")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consultations Consultation[]
+  bookmarks     Bookmark[]
+
+  @@map("lawyers")
+}
+
+model Consultation {
+  id              String    @id @default(cuid())
+  lawyerId        String    @map("lawyer_id")
+  clientId        String    @map("client_id")
+  contractId      String?   @map("contract_id")
+  type            String?
+  scheduledAt     DateTime  @map("scheduled_at")
+  duration        Int       @default(30)
+  status          String    @default("pending")
+  price           Decimal   @db.Decimal(10, 2)
+  platformFee     Decimal   @map("platform_fee") @db.Decimal(10, 2)
+  paymentStatus   String    @default("pending") @map("payment_status")
+  paymentIntentId String?   @map("payment_intent_id")
+  meetingUrl      String?   @map("meeting_url")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  lawyer   Lawyer    @relation(fields: [lawyerId], references: [id])
+  client   User      @relation("ClientConsultations", fields: [clientId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@index([lawyerId])
+  @@index([clientId])
+  @@map("consultations")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  creatorId   String   @map("creator_id")
+  name        String
+  description String?
+  category    String
+  industry    String?
+  type        String
+  content     String
+  clauses     Json     @default("[]")
+  price       Decimal  @default(0) @db.Decimal(10, 2)
+  isPremium   Boolean  @default(false) @map("is_premium")
+  isFeatured  Boolean  @default(false) @map("is_featured")
+  usageCount  Int      @default(0) @map("usage_count")
+  rating      Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount Int      @default(0) @map("review_count")
+  tags        Json     @default("[]")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  creator   User               @relation(fields: [creatorId], references: [id])
+  purchases TemplatePurchase[]
+  bookmarks Bookmark[]
+
+  @@index([category])
+  @@index([creatorId])
+  @@map("templates")
+}
+
+model TemplatePurchase {
+  id              String   @id @default(cuid())
+  templateId      String   @map("template_id")
+  userId          String   @map("user_id")
+  price           Decimal  @db.Decimal(10, 2)
+  creatorShare    Decimal  @map("creator_share") @db.Decimal(10, 2)
+  platformShare   Decimal  @map("platform_share") @db.Decimal(10, 2)
+  paymentIntentId String?  @map("payment_intent_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  template Template @relation(fields: [templateId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@map("template_purchases")
+}
+
+model Bookmark {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  contractId String?   @map("contract_id")
+  templateId String?   @map("template_id")
+  lawyerId   String?   @map("lawyer_id")
+  notes      String?
+  tags       Json      @default("[]")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contract Contract? @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  template Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  lawyer   Lawyer?   @relation(fields: [lawyerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contractId])
+  @@unique([userId, templateId])
+  @@unique([userId, lawyerId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+model ShareLink {
+  id           String    @id @default(cuid())
+  shareId      String    @unique @map("share_id")
+  analysisId   String    @map("analysis_id")
+  createdBy    String    @map("created_by")
+  passwordHash String?   @map("password_hash")
+  expiresAt    DateTime? @map("expires_at")
+  viewCount    Int       @default(0) @map("view_count")
+  maxViews     Int?      @map("max_views")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  metadata     Json      @default("{}")
+
+  analysis  Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  createdByUser User @relation(fields: [createdBy], references: [id])
+
+  @@map("share_links")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  changes    Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  result     String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_log")
+}

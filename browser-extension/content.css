@@ -1,0 +1,164 @@
+/* ─────────────────────────────────────────
+   BeforeYouSign — Content Script Styles
+   Grammarly-style highlights + tooltips
+───────────────────────────────────────── */
+
+@keyframes bysBadgeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bysTooltipIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bysSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Badge chips ── */
+.bys-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.bys-chip-critical { background: rgba(255,255,255,0.25); }
+.bys-chip-high     { background: rgba(255,255,255,0.22); }
+.bys-chip-medium   { background: rgba(255,255,255,0.2); }
+
+/* ── Badge logo ── */
+.bys-badge-logo {
+  font-size: 15px;
+}
+
+/* ── Badge spinner ── */
+.bys-badge-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: bysSpin 0.8s linear infinite;
+}
+
+/* ── Tooltip ── */
+#bys-tooltip {
+  position: absolute !important;
+  width: 330px !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08) !important;
+  padding: 0 !important;
+  z-index: 2147483647 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
+  color: #111827 !important;
+  animation: bysTooltipIn 0.2s ease !important;
+  overflow: hidden !important;
+  line-height: 1.5 !important;
+}
+
+.bys-tt-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.bys-tt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bys-tt-risk {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bys-tt-icon {
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.bys-tt-category {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: capitalize;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.bys-tt-close {
+  margin-left: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 13px;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.bys-tt-close:hover { color: #374151; }
+
+.bys-tt-plain {
+  padding: 10px 14px 6px;
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.bys-tt-concerns {
+  padding: 0 14px 6px;
+}
+.bys-tt-concern {
+  font-size: 12px;
+  color: #b45309;
+  padding: 3px 0;
+}
+
+.bys-tt-suggestion {
+  margin: 4px 14px 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #166534;
+}
+
+.bys-tt-suggestion-label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.bys-tt-link {
+  display: block;
+  padding: 8px 14px;
+  background: #1c1917;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.15s;
+}
+.bys-tt-link:hover {
+  background: #292524 !important;
+}

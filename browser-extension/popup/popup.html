@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeforeYouSign</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-root" id="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <span class="header-logo">⚖</span>
+        <span class="header-name">BeforeYouSign</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-toggle" title="Toggle highlights (Ctrl+Shift+H)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-reanalyze" title="Re-analyze page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-settings" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Body states -->
+    <div id="state-idle" class="state hidden">
+      <div class="idle-icon">⚖</div>
+      <div class="idle-title">No contract detected</div>
+      <div class="idle-sub">Navigate to a page with contract text, or paste one at BeforeYouSign.com</div>
+      <a href="http://localhost:3000/analyze" target="_blank" class="btn btn-primary">
+        Open BeforeYouSign
+      </a>
+    </div>
+
+    <div id="state-analyzing" class="state hidden">
+      <div class="analyzing-wrap">
+        <div class="analyzing-spinner"></div>
+        <div class="analyzing-text">Analyzing contract…</div>
+        <div class="analyzing-sub">This takes a few seconds</div>
+      </div>
+    </div>
+
+    <div id="state-results" class="state hidden">
+      <!-- Risk gauge -->
+      <div class="risk-gauge" id="risk-gauge">
+        <svg viewBox="0 0 100 54" class="gauge-svg">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#16a34a"/>
+              <stop offset="40%"  stop-color="#ca8a04"/>
+              <stop offset="75%"  stop-color="#ea580c"/>
+              <stop offset="100%" stop-color="#dc2626"/>
+            </linearGradient>
+          </defs>
+          <!-- Track -->
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/>
+          <!-- Fill -->
+          <path id="gauge-fill" d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="141.4" stroke-dashoffset="141.4"/>
+          <!-- Needle -->
+          <line id="gauge-needle" x1="50" y1="50" x2="50" y2="12" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+          <circle cx="50" cy="50" r="4" fill="#1c1917"/>
+        </svg>
+        <div class="gauge-score" id="gauge-score">0</div>
+        <div class="gauge-label" id="gauge-label">Risk Score</div>
+      </div>
+
+      <!-- Stat chips -->
+      <div class="stat-row" id="stat-row"></div>
+
+      <!-- Summary line -->
+      <div class="summary-text" id="summary-text"></div>
+
+      <!-- Issue list -->
+      <div class="section-title">Issues Found</div>
+      <div class="issue-list" id="issue-list"></div>
+
+      <!-- CTA -->
+      <a href="http://localhost:3000/analyze" target="_blank" class="btn btn-primary btn-full">
+        Full Analysis on BeforeYouSign →
+      </a>
+    </div>
+
+    <div id="state-safe" class="state hidden">
+      <div class="safe-icon">✅</div>
+      <div class="safe-title">Looks safe!</div>
+      <div class="safe-sub">No risky clauses detected on this page.</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>BeforeYouSign v1.0</span>
+      <span>·</span>
+      <a href="http://localhost:3000" target="_blank">Open App</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
