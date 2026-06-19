@@ -2100,7 +2100,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
             {(() => {
               let financial = 0, termination = 0, liability = 0, compliance = 0;
               analysis.clauses.forEach(c => {
-                const text = (c.title + ' ' + (c.explanation || '') + ' ' + (c.plainLanguage || '')).toLowerCase();
+                const text = (c.title + ' ' + (c.originalText || '') + ' ' + (c.plainLanguage || '')).toLowerCase();
                 const weight = c.riskLevel === 'critical' ? 3 : c.riskLevel === 'high' ? 2 : c.riskLevel === 'medium' ? 1 : 0.5;
                 if (text.match(/payment|fee|financ|penalty|interest|money/)) financial += weight;
                 if (text.match(/terminat|cancel|expire/)) termination += weight;
