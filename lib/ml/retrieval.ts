@@ -25,6 +25,7 @@ export interface RetrievalResponse {
   results: RetrievalResult[];
   predictedCategory: string;
   confidence: number;
+  recommendedAlternative?: RetrievalResult;
 }
 
 // Bounded in-memory query cache (FIFO eviction, max 500 entries)
@@ -34,9 +35,9 @@ const queryCache = new Map<string, RetrievalResponse>();
  * Searches the local LEDGAR Knowledge Base for the most similar clause
  * to the provided input text and predicts its category.
  */
-export async function findSimilarClause(text: string, topK: number = 3): Promise<RetrievalResponse> {
+export async function findSimilarClause(text: string, topK: number = 3, currentRiskScore?: number): Promise<RetrievalResponse> {
   try {
-    const cacheKey = `${text.substring(0, 50)}_${topK}`;
+    const cacheKey = `${text.substring(0, 50)}_${topK}_${currentRiskScore || 0}`;
     if (queryCache.has(cacheKey)) {
       return queryCache.get(cacheKey)!;
     }
@@ -96,11 +97,35 @@ export async function findSimilarClause(text: string, topK: number = 3): Promise
         bestCategory = cat;
       }
     }
+
+    // 5. Risk-Aware Clause Recommendation Engine
+    let recommendedAlternative: RetrievalResult | undefined = undefined;
+    if (currentRiskScore !== undefined) {
+      // Step 1: Retrieve Top 20 similar clauses
+      const top20 = results.slice(0, 20);
+      
+      // Step 2: Remove clauses with risk >= current clause risk
+      const saferAlternatives = top20.filter(c => c.riskScoreBenchmark < currentRiskScore);
+      
+      if (saferAlternatives.length > 0) {
+        // Step 3: Sort by similarityScore DESC, riskScoreBenchmark ASC
+        saferAlternatives.sort((a, b) => {
+          if (b.similarityScore !== a.similarityScore) {
+            return b.similarityScore - a.similarityScore;
+          }
+          return a.riskScoreBenchmark - b.riskScoreBenchmark;
+        });
+        
+        // Step 4: Return the best recommendation
+        recommendedAlternative = saferAlternatives[0];
+      }
+    }
     
     const response: RetrievalResponse = {
       results: finalResults,
       predictedCategory: bestCategory,
-      confidence: Math.round((maxVotes / topK) * 100)
+      confidence: Math.round((maxVotes / topK) * 100),
+      recommendedAlternative
     };
     
     queryCache.set(cacheKey, response);

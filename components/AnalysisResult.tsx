@@ -101,16 +101,16 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
   const [showExecutiveReport, setShowExecutiveReport] = useState(false);
 
   // NEW: ML Semantic Similarity
-  const [similarClauses, setSimilarClauses] = useState<Record<string, { results: any[], predictedCategory: string, confidence: number }>>({});
+  const [similarClauses, setSimilarClauses] = useState<Record<string, { results: any[], predictedCategory: string, confidence: number, recommendedAlternative?: any }>>({});
   const [isSearchingSimilarity, setIsSearchingSimilarity] = useState<Record<string, boolean>>({});
 
-  const handleFindSimilarClauses = async (clauseId: string, text: string) => {
+  const handleFindSimilarClauses = async (clauseId: string, text: string, currentRiskScore?: number) => {
     setIsSearchingSimilarity(prev => ({ ...prev, [clauseId]: true }));
     try {
       const response = await fetch('/api/ml/similar-clauses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, topK: 3 })
+        body: JSON.stringify({ text, topK: 3, currentRiskScore })
       });
       if (response.ok) {
         const data = await response.json();
@@ -119,7 +119,8 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
           [clauseId]: {
             results: data.results || [],
             predictedCategory: data.predictedCategory || 'Unknown',
-            confidence: data.confidence || 0
+            confidence: data.confidence || 0,
+            recommendedAlternative: data.recommendedAlternative
           }
         }));
       }
@@ -2905,7 +2906,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                       </button>
                                     ) : (
                                       <button
-                                        onClick={() => handleFindSimilarClauses(clause.id, clause.originalText)}
+                                        onClick={() => handleFindSimilarClauses(clause.id, clause.originalText, clause.fairnessScore !== undefined ? 100 - clause.fairnessScore : (clause.riskLevel === 'critical' ? 100 : clause.riskLevel === 'high' ? 75 : clause.riskLevel === 'medium' ? 50 : 25))}
                                         className="p-2 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
                                         title="Find Similar Industry Clauses"
                                         aria-label="Find similar clauses in LEDGAR knowledge base"
@@ -2986,6 +2987,41 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                   </div>
 
                                   <div className="flex flex-col gap-3">
+                                    {/* ML Feature 3: Risk-Aware Clause Recommendation Engine */}
+                                    {similarClauses[clause.id].recommendedAlternative && (
+                                      <div className="mb-4 bg-green-50 border-2 border-green-500 p-4 rounded relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-bl">
+                                          Recommended Alternative
+                                        </div>
+                                        <div className="flex items-center gap-2 mb-3 border-b border-green-200 pb-2 pr-24">
+                                          <Sparkles className="w-4 h-4 text-green-600" />
+                                          <h4 className="text-sm font-bold text-green-900">Benchmark-Based Recommendation</h4>
+                                        </div>
+                                        <p className="text-sm text-stone-800 italic font-serif leading-relaxed mb-4">
+                                          "{similarClauses[clause.id].recommendedAlternative.text}"
+                                        </p>
+                                        
+                                        <div className="bg-white rounded p-3 border border-green-200">
+                                          <p className="text-[10px] uppercase font-bold text-stone-500 mb-2">Estimated Risk Reduction</p>
+                                          <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs text-stone-500 line-through">Risk {clause.fairnessScore !== undefined ? 100 - clause.fairnessScore : (clause.riskLevel === 'critical' ? 100 : clause.riskLevel === 'high' ? 75 : clause.riskLevel === 'medium' ? 50 : 25)}</span>
+                                              <TrendingDown className="w-4 h-4 text-green-500" />
+                                              <span className="text-sm font-bold text-green-700">Risk {similarClauses[clause.id].recommendedAlternative.riskScoreBenchmark}</span>
+                                            </div>
+                                            <div className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded">
+                                              Improvement: -{Math.max(0, (clause.fairnessScore !== undefined ? 100 - clause.fairnessScore : (clause.riskLevel === 'critical' ? 100 : clause.riskLevel === 'high' ? 75 : clause.riskLevel === 'medium' ? 50 : 25)) - similarClauses[clause.id].recommendedAlternative.riskScoreBenchmark)} points
+                                            </div>
+                                          </div>
+                                          <div className="mt-3 pt-3 border-t border-green-100">
+                                            <p className="text-xs text-stone-600">
+                                              <span className="font-bold">Reason:</span> This alternative from the LEDGAR corpus ({similarClauses[clause.id].recommendedAlternative.source || 'Industry Standard'}) maintains a {similarClauses[clause.id].recommendedAlternative.similarityScore}% semantic similarity while optimizing for a lower risk footprint.
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
                                     {similarClauses[clause.id].results.map((similarClause: any, idx: number) => {
                                       const fairness = clause.fairnessScore || 50;
                                       const yourRisk = 100 - fairness;

@@ -1,17 +1,8 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { euclideanDistance } from '@/lib/ml/clustering';
+import { getContractEmbedding, computeSemanticSimilarity } from '@/lib/ml/portfolio-similarity';
 
 const prisma = new PrismaClient();
-
-// Normalization function to ensure features are roughly on the same scale (0-1)
-function normalizeMetadata(risk: number, redFlags: number, clauses: number) {
-  return [
-    risk / 100,           // Risk is 0-100
-    Math.min(redFlags / 20, 1), // Assume 20 red flags is max
-    Math.min(clauses / 50, 1)   // Assume 50 clauses is max
-  ];
-}
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +21,8 @@ export async function POST(request: Request) {
         riskScore: true,
         redFlagsCount: true,
         clausesCount: true,
-        createdAt: true
+        createdAt: true,
+        summary: true
       }
     });
 
@@ -43,51 +35,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Target contract not found' }, { status: 404 });
     }
 
-    const targetVector = normalizeMetadata(target.riskScore, target.redFlagsCount, target.clausesCount);
+    // Generate/fetch semantic embedding on demand
+    const targetVector = await getContractEmbedding(target.id, target.summary);
     
-    // Compute distance and build results
-    const results = allContracts
-      .filter(c => c.id !== contractId)
-      .map(contract => {
-        const vector = normalizeMetadata(contract.riskScore, contract.redFlagsCount, contract.clausesCount);
-        const distance = euclideanDistance(targetVector, vector);
-        
-        // Convert distance (0 to ~1.73) to a similarity percentage (0-100)
-        // Max theoretical distance is sqrt(1^2 + 1^2 + 1^2) = 1.732
-        const maxDist = Math.sqrt(3);
-        const similarityScore = Math.max(0, Math.round((1 - (distance / maxDist)) * 100));
+    const candidates = allContracts.filter(c => c.id !== contractId);
+    
+    // Compute distance and build results using Promise.all to fetch embeddings in parallel
+    const resultsPromises = candidates.map(async contract => {
+      const vector = await getContractEmbedding(contract.id, contract.summary);
+      const similarityScore = computeSemanticSimilarity(targetVector, vector);
+      
+      // Generate explainability reasons based on Semantic Proximity + Metadata Fallbacks
+      const reasons: string[] = [];
+      if (similarityScore >= 80) {
+        reasons.push('High semantic alignment in executive summary');
+      } else if (similarityScore >= 60) {
+        reasons.push('Moderate semantic overlap in contractual language');
+      } else {
+        reasons.push('Broad thematic similarity');
+      }
+      
+      if (target.contractType && target.contractType !== 'Unknown' && target.contractType === contract.contractType) {
+        reasons.push(`Same identified contract type (${target.contractType})`);
+      }
+      if (Math.abs(target.riskScore - contract.riskScore) <= 15) {
+        reasons.push('Similar overall risk profile');
+      }
 
-        // Generate explainability reasons based on Euclidean feature proximity
-        const reasons: string[] = [];
-        if (Math.abs(target.riskScore - contract.riskScore) <= 15) {
-          reasons.push('Similar overall risk profile');
-        }
-        if (Math.abs(target.redFlagsCount - contract.redFlagsCount) <= 3) {
-          reasons.push('Similar red flag density');
-        }
-        if (Math.abs(target.clausesCount - contract.clausesCount) <= 10) {
-          reasons.push('Similar structural complexity (clause count)');
-        }
-        if (target.contractType && target.contractType !== 'Unknown' && target.contractType === contract.contractType) {
-          reasons.push(`Same identified contract type (${target.contractType})`);
-        }
-        if (reasons.length === 0) {
-          reasons.push('Broad portfolio metadata alignment');
-        }
+      return {
+        id: contract.id,
+        fileName: contract.fileName,
+        similarityScore,
+        reasons
+      };
+    });
 
-        return {
-          id: contract.id,
-          fileName: contract.fileName,
-          similarityScore,
-          reasons
-        };
-      })
+    const unsortedResults = await Promise.all(resultsPromises);
+    const results = unsortedResults
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, limit);
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
     console.error('Error in similar-contracts API:', error);
-    return NextResponse.json({ success: false, error: 'Failed to compute portfolio neighbors' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to compute semantic portfolio neighbors' }, { status: 500 });
   }
 }
