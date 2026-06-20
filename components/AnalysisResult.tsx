@@ -101,7 +101,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
   const [showExecutiveReport, setShowExecutiveReport] = useState(false);
 
   // NEW: ML Semantic Similarity
-  const [similarClauses, setSimilarClauses] = useState<Record<string, any[]>>({});
+  const [similarClauses, setSimilarClauses] = useState<Record<string, { results: any[], predictedCategory: string, confidence: number }>>({});
   const [isSearchingSimilarity, setIsSearchingSimilarity] = useState<Record<string, boolean>>({});
 
   const handleFindSimilarClauses = async (clauseId: string, text: string) => {
@@ -114,7 +114,14 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
       });
       if (response.ok) {
         const data = await response.json();
-        setSimilarClauses(prev => ({ ...prev, [clauseId]: data.results }));
+        setSimilarClauses(prev => ({ 
+          ...prev, 
+          [clauseId]: {
+            results: data.results || [],
+            predictedCategory: data.predictedCategory || 'Unknown',
+            confidence: data.confidence || 0
+          }
+        }));
       }
     } catch (error) {
       console.error('Failed to fetch similar clauses:', error);
@@ -2957,7 +2964,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                               </div>
                               
                               {/* Similar Industry Clauses Detection (ML Retrieval) */}
-                              {similarClauses[clause.id] && similarClauses[clause.id].length > 0 && (
+                              {similarClauses[clause.id] && similarClauses[clause.id].results?.length > 0 && (
                                 <div className="mb-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 p-4 rounded">
                                   <div className="flex items-center gap-2 mb-4 border-b border-purple-200 pb-2">
                                     <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2965,15 +2972,42 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                     </svg>
                                     <p className="text-sm text-purple-900 uppercase tracking-wider font-bold">Industry Standard Clauses (LEDGAR)</p>
                                   </div>
+                                  
+                                  {/* ML Feature 2: Clause Category Prediction */}
+                                  <div className="flex items-center justify-between bg-white border border-purple-200 p-3 rounded mb-4 shadow-sm">
+                                    <div>
+                                      <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Predicted Clause Category</p>
+                                      <p className="text-sm font-bold text-stone-800">{similarClauses[clause.id].predictedCategory}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">AI Confidence</p>
+                                      <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">{similarClauses[clause.id].confidence}%</span>
+                                    </div>
+                                  </div>
+
                                   <div className="flex flex-col gap-3">
-                                    {similarClauses[clause.id].map((similarClause: any, idx: number) => {
+                                    {similarClauses[clause.id].results.map((similarClause: any, idx: number) => {
                                       const fairness = clause.fairnessScore || 50;
                                       const yourRisk = 100 - fairness;
                                       const delta = similarClause.corpusStats ? Math.round(yourRisk - similarClause.corpusStats.medianRisk) : 0;
                                       return (
                                         <div key={idx} className="bg-white p-3 rounded border border-purple-100 shadow-sm relative">
                                           <div className="absolute top-3 right-3 flex items-center gap-2">
-                                            <span className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded">{similarClause.similarityScore}% Match</span>
+                                            {/* ML Feature 1: Clause Deviation Detection */}
+                                            <div className="flex flex-col items-end">
+                                              <span className="text-[10px] text-stone-500 font-semibold uppercase mb-0.5">Industry Alignment</span>
+                                              <span className="text-xs font-bold text-purple-700">{similarClause.similarityScore}%</span>
+                                            </div>
+                                            <div className="flex flex-col items-end border-l border-stone-200 pl-2">
+                                              <span className="text-[10px] text-stone-500 font-semibold uppercase mb-0.5">Deviation Risk</span>
+                                              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                                                similarClause.similarityScore >= 80 ? 'bg-green-100 text-green-700' :
+                                                similarClause.similarityScore >= 60 ? 'bg-orange-100 text-orange-700' :
+                                                'bg-red-100 text-red-700'
+                                              }`}>
+                                                {similarClause.similarityScore >= 80 ? 'Low' : similarClause.similarityScore >= 60 ? 'Medium' : 'High'}
+                                              </span>
+                                            </div>
                                           </div>
                                           <div className="flex items-center gap-2 mb-1">
                                             <h5 className="text-xs font-bold text-purple-800">{similarClause.category}</h5>

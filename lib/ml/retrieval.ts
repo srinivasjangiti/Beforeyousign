@@ -21,14 +21,20 @@ export interface RetrievalResult {
   corpusStats?: CorpusStats;
 }
 
+export interface RetrievalResponse {
+  results: RetrievalResult[];
+  predictedCategory: string;
+  confidence: number;
+}
+
 // Bounded in-memory query cache (FIFO eviction, max 500 entries)
-const queryCache = new Map<string, RetrievalResult[]>();
+const queryCache = new Map<string, RetrievalResponse>();
 
 /**
  * Searches the local LEDGAR Knowledge Base for the most similar clause
- * to the provided input text.
+ * to the provided input text and predicts its category.
  */
-export async function findSimilarClause(text: string, topK: number = 3): Promise<RetrievalResult[]> {
+export async function findSimilarClause(text: string, topK: number = 3): Promise<RetrievalResponse> {
   try {
     const cacheKey = `${text.substring(0, 50)}_${topK}`;
     if (queryCache.has(cacheKey)) {
@@ -76,7 +82,28 @@ export async function findSimilarClause(text: string, topK: number = 3): Promise
       }
     }
     
-    queryCache.set(cacheKey, finalResults);
+    // 4. K-NN Category Prediction based on Top-K
+    const categoryCounts: Record<string, number> = {};
+    for (const res of finalResults) {
+      categoryCounts[res.category] = (categoryCounts[res.category] || 0) + 1;
+    }
+    
+    let bestCategory = 'Unknown';
+    let maxVotes = 0;
+    for (const [cat, votes] of Object.entries(categoryCounts)) {
+      if (votes > maxVotes) {
+        maxVotes = votes;
+        bestCategory = cat;
+      }
+    }
+    
+    const response: RetrievalResponse = {
+      results: finalResults,
+      predictedCategory: bestCategory,
+      confidence: Math.round((maxVotes / topK) * 100)
+    };
+    
+    queryCache.set(cacheKey, response);
     
     // Prevent cache from growing infinitely
     if (queryCache.size > 500) {
@@ -84,10 +111,10 @@ export async function findSimilarClause(text: string, topK: number = 3): Promise
       if (firstKey) queryCache.delete(firstKey);
     }
     
-    return finalResults;
+    return response;
     
   } catch (error) {
     console.error('Error during semantic search:', error);
-    return [];
+    return { results: [], predictedCategory: 'Unknown', confidence: 0 };
   }
 }
