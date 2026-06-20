@@ -14,15 +14,29 @@ interface CacheEntry {
 const embeddingCache = new Map<string, CacheEntry>();
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+export const cacheMetrics = {
+  hits: 0,
+  misses: 0,
+  get hitRate() {
+    const total = this.hits + this.misses;
+    return total === 0 ? 0 : Math.round((this.hits / total) * 100);
+  }
+};
+
 export function getCachedEmbedding(contractId: string): number[] | null {
   const entry = embeddingCache.get(contractId);
-  if (!entry) return null;
-  
-  if (Date.now() - entry.timestamp > TTL_MS) {
-    embeddingCache.delete(contractId);
+  if (!entry) {
+    cacheMetrics.misses++;
     return null;
   }
   
+  if (Date.now() - entry.timestamp > TTL_MS) {
+    embeddingCache.delete(contractId);
+    cacheMetrics.misses++;
+    return null;
+  }
+  
+  cacheMetrics.hits++;
   return entry.embedding;
 }
 
