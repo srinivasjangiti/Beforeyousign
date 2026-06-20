@@ -96,6 +96,7 @@ export default function PredictiveAnalyticsDashboard() {
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Brain className="h-8 w-8 text-stone-900" />
             Predictive Analytics
+            <span className="ml-4 px-3 py-1 bg-amber-100 text-amber-800 text-sm font-bold rounded-full border border-amber-300">PROTOTYPE MODULE - COMING SOON</span>
           </h1>
           <p className="text-stone-600 mt-1">AI-powered insights and forecasting</p>
         </div>

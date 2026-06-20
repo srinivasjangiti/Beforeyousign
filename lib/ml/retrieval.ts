@@ -21,6 +21,7 @@ export interface RetrievalResult {
   corpusStats?: CorpusStats;
 }
 
+// Bounded in-memory query cache (FIFO eviction, max 500 entries)
 const queryCache = new Map<string, RetrievalResult[]>();
 
 /**

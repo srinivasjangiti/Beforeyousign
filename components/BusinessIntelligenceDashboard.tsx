@@ -50,7 +50,10 @@ export default function BusinessIntelligenceDashboard() {
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
       <div className="bg-white border-b border-stone-200 p-6">
-        <h1 className="text-3xl font-bold mb-2">Business Intelligence Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-4">
+          Business Intelligence Dashboard
+          <span className="px-3 py-1 bg-amber-100 text-amber-800 text-sm font-bold rounded-full border border-amber-300">PROTOTYPE MODULE - COMING SOON</span>
+        </h1>
         <p className="text-stone-600">Portfolio optimization and strategic insights</p>
       </div>
 

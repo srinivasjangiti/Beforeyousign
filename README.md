@@ -18,3 +18,16 @@ BeforeYouSign is a state-of-the-art, AI-powered legal intelligence platform desi
 - **AI Integration:** NVIDIA NIM API (Llama 3.1 405B Instruct)
 
 Please refer to [Documentation/Major Project.md](./Documentation/Major%20Project.md) for the complete architectural report, evolution history, and technical deep-dives.
+
+## ML Setup
+
+To run the machine learning capabilities locally:
+
+1. `npm install`
+2. `npx prisma generate`
+3. `npx prisma db push`
+4. `node scripts/fetch_ledgar.mjs`
+5. `node scripts/generate_embeddings.mjs`
+6. `npm run dev`
+
+*Note: The first time you use the ML endpoints, the 23MB ONNX embedding model will be downloaded automatically.*

@@ -243,7 +243,10 @@ export default function TeamCollaboration() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-stone-900 mb-2">Team Collaboration</h1>
+            <h1 className="text-4xl font-bold text-stone-900 mb-2 flex items-center gap-4">
+              Team Collaboration
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 text-sm font-bold rounded-full border border-amber-300">PROTOTYPE MODULE - COMING SOON</span>
+            </h1>
             <p className="text-lg text-stone-600">Work together on contract reviews and approvals</p>
           </div>
           <button
