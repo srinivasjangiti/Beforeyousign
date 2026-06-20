@@ -2992,9 +2992,20 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                           {/* Clause Risk Benchmarking */}
                                           {similarClause.corpusStats && (
                                             <div className="bg-stone-50 rounded border border-stone-200 p-4 mt-3">
-                                              <div className="flex items-center justify-between mb-4">
-                                                <p className="text-[10px] uppercase font-bold text-stone-500">Clause Risk Benchmarking</p>
-                                                <span className="text-[10px] font-bold text-stone-400 bg-stone-200 px-2 py-0.5 rounded-full">{similarClause.corpusStats.sampleSize} clauses</span>
+                                              <div className="flex flex-col mb-4">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-1.5">
+                                                    <p className="text-[10px] uppercase font-bold text-stone-500">Clause Risk Benchmarking</p>
+                                                    <div className="group relative cursor-help flex items-center">
+                                                      <Info className="w-3 h-3 text-stone-400" />
+                                                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 w-48 p-2 bg-stone-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center leading-relaxed">
+                                                        Internal heuristic score used for comparative analytics.
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <span className="text-[10px] font-bold text-stone-400 bg-stone-200 px-2 py-0.5 rounded-full">{similarClause.corpusStats.sampleSize} clauses</span>
+                                                </div>
+                                                <p className="text-[9px] text-stone-400 mt-1 italic">Note: Risk scores are synthetic heuristic benchmarks, not native to LEDGAR.</p>
                                               </div>
                                               
                                               <div className="mt-6 mb-8">
