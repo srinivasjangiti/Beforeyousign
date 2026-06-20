@@ -1,28 +1,27 @@
 # BeforeYouSign
 
-BeforeYouSign is a state-of-the-art, AI-powered legal intelligence platform designed to democratize legal expertise. The platform enables users to analyze, understand, negotiate, draft, manage, and collaborate on complex legal contracts. By leveraging advanced Natural Language Processing (NLP) models (NVIDIA NIM, Llama 3.1 405B), the system dramatically reduces the time and cost associated with legal review.
+BeforeYouSign is a state-of-the-art, AI-powered legal intelligence platform designed to democratize legal expertise. The platform uses a serverless dual-pipeline architecture: generative AI (Llama 3.1 405B) handles deep textual extraction, while a localized ONNX transformer pipeline (MiniLM) powers deterministic risk benchmarking and semantic search.
 
-## Key Features
-- **AI Contract Analysis:** Instantly analyze uploaded PDFs, DOCXs, or TXT files for risk scores and red flags.
-- **Contract Chat:** Have a conversational RAG-based interaction with your contract to query specific clauses.
-- **Contract Drafting:** Generate custom legal agreements instantly using AI.
-- **Dashboard Analytics:** Track portfolio health, risk distributions, and contract volumes.
-- **Document Export:** Export analysis results cleanly to PDF or Word (.doc).
-- **Comparison & Deltas:** Diff two contracts side-by-side to highlight added/removed clauses.
-- **Contract Repository:** Safely persist and manage all your historical documents.
+## 📌 Quick Links for Reviewers & Recruiters
+- 📖 [Major Project Report](./Major_Project.md)
+- 🧠 [Machine Learning Case Study](./ML_CASE_STUDY.md)
+- 🏗️ [Architecture & ML Pipeline Diagrams](./ARCHITECTURE.md)
+- 🎓 [Viva Preparation & Technical Defenses](./Viva_Prep.md)
 
-## Technology Stack
-- **Frontend:** Next.js 14 (App Router), React, Tailwind CSS, Lucide
-- **Backend:** Next.js Server Actions & API Routes, NextAuth
-- **Database:** Prisma ORM, PostgreSQL
-- **AI Integration:** NVIDIA NIM API (Llama 3.1 405B Instruct)
+## 🚀 Key Features
+- **Semantic Portfolio Discovery:** Instantaneously clusters a user's entire contract portfolio using 384-dimensional cosine similarity embeddings via an ephemeral in-memory cache.
+- **Risk-Aware Clause Recommendations:** Retrieves and ranks industry-standard clauses from the LEDGAR corpus, calculating an 'Estimated Risk Reduction' to suggest safer legal language.
+- **k-NN Category Prediction:** Classifies unknown clauses by calculating the majority vote of their nearest LEDGAR neighbors.
+- **AI Contract Analysis:** Instantly analyze PDFs, DOCXs, or TXT files for risk scores and red flags.
+- **Contract Drafting & Chat:** RAG-based conversations and custom legal agreement generation.
 
-Please refer to [Documentation/Major Project.md](./Documentation/Major%20Project.md) for the complete architectural report, evolution history, and technical deep-dives.
+## 🛠 Technology Stack
+- **Frontend:** Next.js 14 (App Router), React, Tailwind CSS
+- **Backend:** Serverless API Routes, Prisma ORM, PostgreSQL
+- **Machine Learning:** Transformers.js (ONNX), MiniLM-L6-v2, Cosine Similarity
+- **Generative AI:** NVIDIA NIM API (Llama 3.1 405B Instruct)
 
-## ML Setup
-
-To run the machine learning capabilities locally:
-
+## 💻 Local Setup
 1. `npm install`
 2. `npx prisma generate`
 3. `npx prisma db push`
