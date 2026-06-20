@@ -4,17 +4,9 @@ import AnalysisResult from '@/components/AnalysisResult';
 import { ContractAnalysis } from '@/lib/types';
 import Link from 'next/link';
 import { ChevronLeft, FileText, Link2 } from 'lucide-react';
-import { euclideanDistance } from '@/lib/ml/clustering';
+import { getContractEmbedding, computeSemanticSimilarity } from '@/lib/ml/portfolio-similarity';
 
 const prisma = new PrismaClient();
-
-function normalizeMetadata(risk: number, redFlags: number, clauses: number) {
-  return [
-    risk / 100,
-    Math.min(redFlags / 20, 1),
-    Math.min(clauses / 50, 1)
-  ];
-}
 
 export default async function ContractDetailPage({ params }: { params: { id: string } }) {
   const allContracts = await prisma.analyzedContract.findMany({
@@ -36,28 +28,34 @@ export default async function ContractDetailPage({ params }: { params: { id: str
     return notFound();
   }
 
-  // Calculate Related Contracts (Portfolio Neighbors)
-  const targetVector = normalizeMetadata(contract.riskScore, contract.redFlagsCount, contract.clausesCount);
-  const maxDist = Math.sqrt(3);
+  // Calculate Related Contracts (Semantic Portfolio Neighbors)
+  const targetVector = await getContractEmbedding(contract.id, contract.summary);
   
-  const relatedContracts = allContracts
+  const relatedContractsPromises = allContracts
     .filter(c => c.id !== contract.id)
-    .map(other => {
-      const vector = normalizeMetadata(other.riskScore, other.redFlagsCount, other.clausesCount);
-      const distance = euclideanDistance(targetVector, vector);
-      const similarityScore = Math.max(0, Math.round((1 - (distance / maxDist)) * 100));
+    .map(async other => {
+      const vector = await getContractEmbedding(other.id, other.summary);
+      const similarityScore = computeSemanticSimilarity(targetVector, vector);
 
       const reasons: string[] = [];
-      if (Math.abs(contract.riskScore - other.riskScore) <= 15) reasons.push('Similar risk profile');
-      if (Math.abs(contract.redFlagsCount - other.redFlagsCount) <= 3) reasons.push('Similar red flag density');
-      if (Math.abs(contract.clausesCount - other.clausesCount) <= 10) reasons.push('Similar structural complexity');
+      if (similarityScore >= 80) {
+        reasons.push('High semantic alignment in executive summary');
+      } else if (similarityScore >= 60) {
+        reasons.push('Moderate semantic overlap in contractual language');
+      } else {
+        reasons.push('Broad thematic similarity');
+      }
+      
       if (contract.contractType && contract.contractType !== 'Unknown' && contract.contractType === other.contractType) {
         reasons.push(`Same identified contract type`);
       }
-      if (reasons.length === 0) reasons.push('Broad portfolio metadata alignment');
+      if (Math.abs(contract.riskScore - other.riskScore) <= 15) reasons.push('Similar risk profile');
 
       return { ...other, similarityScore, reasons };
-    })
+    });
+
+  const unsortedRelated = await Promise.all(relatedContractsPromises);
+  const relatedContracts = unsortedRelated
     .sort((a, b) => b.similarityScore - a.similarityScore)
     .slice(0, 3); // Top 3 neighbors
 
