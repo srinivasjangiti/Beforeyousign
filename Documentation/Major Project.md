@@ -500,3 +500,12 @@ The successful development of BeforeYouSign relied on a robust ecosystem of open
 - **NVIDIA NIM API:** The enterprise-grade API gateway used to interface with the Llama 3.1 405B Instruct model. Chosen for its massive parameter count, massive context window, and superior legal reasoning capabilities compared to smaller, self-hosted models.
 
 This comprehensive dependency graph ensures that BeforeYouSign remains performant, secure, and easily extensible for future iterations.
+
+ # #   L i m i t a t i o n s   o f   M L   L a y e r 
+ 
+ 1 .   T h e   r e t r i e v a l   c o r p u s   c u r r e n t l y   c o n t a i n s   2 5 0   L E D G A R   c l a u s e s . 
+ 2 .   R i s k   b e n c h m a r k   v a l u e s   a r e   i n t e r n a l   h e u r i s t i c   v a l u e s   u s e d   f o r   c o m p a r i s o n . 
+ 3 .   P o r t f o l i o   S e g m e n t a t i o n   i s   b a s e d   o n   c o n t r a c t   m e t a d a t a   f e a t u r e s   a n d   n o t   f u l l - d o c u m e n t   s e m a n t i c   e m b e d d i n g s . 
+ 4 .   T h e   c u r r e n t   i m p l e m e n t a t i o n   i s   o p t i m i z e d   f o r   r e t r i e v a l   a n d   b e n c h m a r k i n g   r a t h e r   t h a n   p r e d i c t i v e   c l a s s i f i c a t i o n . 
+  
+ 

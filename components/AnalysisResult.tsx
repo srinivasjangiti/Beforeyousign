@@ -3032,16 +3032,16 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                                               <div className="flex justify-between items-center text-xs border-t border-stone-200 pt-3">
                                                 <div className="flex gap-4">
                                                   <div>
-                                                    <span className="text-stone-400 font-medium mr-1">Median:</span>
+                                                    <span className="text-stone-400 font-medium mr-1">LEDGAR Category Benchmark:</span>
                                                     <span className="font-bold text-stone-700">{similarClause.corpusStats.medianRisk}</span>
                                                   </div>
                                                   <div>
-                                                    <span className="text-stone-400 font-medium mr-1">Yours:</span>
+                                                    <span className="text-stone-400 font-medium mr-1">Your Clause Risk:</span>
                                                     <span className="font-bold text-stone-700">{yourRisk}</span>
                                                   </div>
                                                 </div>
                                                 <div>
-                                                  <span className="text-stone-400 font-medium mr-1">Delta:</span>
+                                                  <span className="text-stone-400 font-medium mr-1">Variance:</span>
                                                   <span className={`font-bold ${delta > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                                     {delta > 0 ? '+' : ''}{delta}
                                                   </span>

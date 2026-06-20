@@ -66,7 +66,7 @@ async function main() {
     const formatted = allRows.map((row, idx) => {
       const labelId = row.row.label;
       const category = CATEGORIES[labelId] || "General Clause";
-      const risk = riskMapping[category] || Math.floor(Math.random() * 30) + 10;
+      const risk = riskMapping[category] || 25;
       
       // Calculate a realistic industry percentile for Sprint 3
       // A risk score of 85 might be 95th percentile. 
