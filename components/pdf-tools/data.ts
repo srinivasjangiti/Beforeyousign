@@ -56,6 +56,21 @@ export interface PDFTool {
     estimatedTime: string;
     ctaText: string;
   };
+  capabilities?: {
+    implemented: boolean;
+    upload: boolean;
+    download: boolean;
+    configurable: boolean;
+    multipleFiles: boolean;
+    preview: boolean;
+  };
+  api?: {
+    endpoint: string;
+    method: 'POST' | 'GET';
+    acceptedTypes: string; // e.g. 'application/pdf'
+    responseType: 'blob' | 'json';
+    downloadFilenamePrefix: string;
+  };
 }
 
 export const CATEGORIES = [
@@ -173,6 +188,7 @@ export const TOOLS: PDFTool[] = [
     icon: Image,
     category: 'convert',
     popular: true,
+    comingSoon: true,
     metadata: {
       title: 'Upload PDF',
       description: 'Extract all pages from a PDF and convert them into high-quality JPG images.',
@@ -180,7 +196,8 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'JPG (ZIP)',
       estimatedTime: '2–4 seconds',
       ctaText: 'Convert to JPG'
-    }
+    },
+    capabilities: { implemented: false, upload: true, download: true, configurable: true, multipleFiles: false, preview: false }
   },
   {
     id: 'jpg-to-pdf',
@@ -196,7 +213,9 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF',
       estimatedTime: '1–3 seconds',
       ctaText: 'Convert to PDF'
-    }
+    },
+    capabilities: { implemented: true, upload: true, download: true, configurable: true, multipleFiles: true, preview: false },
+    api: { endpoint: '/api/pdf/from-image', method: 'POST', acceptedTypes: 'image/jpeg, image/png', responseType: 'blob', downloadFilenamePrefix: 'images-to-pdf' }
   },
 
   // Organize Tools
@@ -214,7 +233,9 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF',
       estimatedTime: '1–3 seconds',
       ctaText: 'Merge PDFs'
-    }
+    },
+    capabilities: { implemented: true, upload: true, download: true, configurable: false, multipleFiles: true, preview: false },
+    api: { endpoint: '/api/pdf/merge', method: 'POST', acceptedTypes: 'application/pdf', responseType: 'blob', downloadFilenamePrefix: 'merged' }
   },
   {
     id: 'split-pdf',
@@ -230,7 +251,9 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF (ZIP)',
       estimatedTime: '2–4 seconds',
       ctaText: 'Split PDF'
-    }
+    },
+    capabilities: { implemented: true, upload: true, download: true, configurable: true, multipleFiles: false, preview: false },
+    api: { endpoint: '/api/pdf/split', method: 'POST', acceptedTypes: 'application/pdf', responseType: 'blob', downloadFilenamePrefix: 'split' }
   },
   {
     id: 'rotate-pdf',
@@ -245,7 +268,9 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF',
       estimatedTime: '1–2 seconds',
       ctaText: 'Rotate PDF'
-    }
+    },
+    capabilities: { implemented: true, upload: true, download: true, configurable: true, multipleFiles: false, preview: false },
+    api: { endpoint: '/api/pdf/rotate', method: 'POST', acceptedTypes: 'application/pdf', responseType: 'blob', downloadFilenamePrefix: 'rotated' }
   },
   {
     id: 'page-numbers',
@@ -261,7 +286,8 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF',
       estimatedTime: '1–3 seconds',
       ctaText: 'Add Page Numbers'
-    }
+    },
+    capabilities: { implemented: false, upload: true, download: true, configurable: true, multipleFiles: false, preview: false }
   },
 
   // Optimize Tools
@@ -279,7 +305,9 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF (Optimized)',
       estimatedTime: '3–8 seconds',
       ctaText: 'Compress PDF'
-    }
+    },
+    capabilities: { implemented: true, upload: true, download: true, configurable: true, multipleFiles: false, preview: false },
+    api: { endpoint: '/api/pdf/compress', method: 'POST', acceptedTypes: 'application/pdf', responseType: 'blob', downloadFilenamePrefix: 'compressed' }
   },
   {
     id: 'repair-pdf',
@@ -413,7 +441,8 @@ export const TOOLS: PDFTool[] = [
       expectedOutput: 'PDF (Encrypted)',
       estimatedTime: '1–3 seconds',
       ctaText: 'Protect PDF'
-    }
+    },
+    capabilities: { implemented: false, upload: true, download: true, configurable: true, multipleFiles: false, preview: false }
   },
   {
     id: 'unlock-pdf',
