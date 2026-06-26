@@ -1,5 +1,6 @@
 'use client';
 
+import { safeDownload } from '@/lib/download-utils';
 import { useState } from 'react';
 import { Upload, FileText, AlertCircle, CheckCircle, ArrowRight, Download, X, RefreshCw } from 'lucide-react';
 
@@ -107,12 +108,7 @@ ${result.modified.map((line, i) => `${i + 1}. ${line}`).join('\n')}
     `.trim();
 
     const blob = new Blob([report], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'contract-comparison-report.txt';
-    a.click();
-  };
+    safeDownload(blob, 'contract-comparison-report.txt');};
 
   return (
     <div className="min-h-screen bg-stone-50 py-12">

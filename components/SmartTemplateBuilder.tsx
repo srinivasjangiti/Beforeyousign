@@ -64,11 +64,11 @@ export default function SmartTemplateBuilderComponent() {
 
   const handleAddClause = (clause: ClauseLibraryItem) => {
     const newSection = {
-      id: `section-${Date.now()}`,
+      id: `section-${crypto.randomUUID()}`,
       order: template.sections.length,
       title: clause.category,
       clauses: [{
-        id: `clause-${Date.now()}`,
+        id: `clause-${crypto.randomUUID()}`,
         clauseLibraryId: clause.id,
         variables: {},
         order: 0,

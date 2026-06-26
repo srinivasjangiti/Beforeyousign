@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "clean": "rimraf .next tsconfig.tsbuildinfo *.log",
-    "fresh": "rimraf .next tsconfig.tsbuildinfo *.log && next dev"
+    "fresh": "rimraf .next tsconfig.tsbuildinfo *.log && next dev",
+    "verify": "npm run lint && npx tsc --noEmit && npm run build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",

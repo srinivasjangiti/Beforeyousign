@@ -7,7 +7,7 @@ import { validateContractFile, sanitizeInput } from '@/lib/security';
 import { createNvidiaClient, NVIDIA_MODELS, parseJsonResponse } from '@/lib/nvidia-client';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 /**
  * Validates the parsed AI JSON response against the expected domain schema.

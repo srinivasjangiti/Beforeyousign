@@ -1,5 +1,6 @@
 'use client';
 
+import { safeDownload } from '@/lib/download-utils';
 import { FileText, Star, Download, Copy, Eye, Search, Filter, TrendingUp, Users, Building, Briefcase, Lock, Code, Home, Handshake, DollarSign, Globe, Shield, Award, CheckCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import { contractTemplates, searchTemplates, getTemplateCategories } from '@/lib/templates-data';
@@ -48,14 +49,7 @@ export default function TemplatesEnhanced() {
     // Generate template overview
     const content = `${template.name}\n\n${template.description}\n\nCategory: ${template.category}\nComplexity: ${template.complexity}\nRating: ${template.rating}/5 (${template.downloadCount.toLocaleString()} downloads)\n\nThis template provides a framework for ${template.name.toLowerCase()}. Customize based on your specific needs and have it reviewed by a legal professional.`;
     const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${template.name.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    safeDownload(blob, `${template.name.replace(/\s+/g, '_')}.txt`);
   };
 
   const handleCopy = (templateId: string) => {

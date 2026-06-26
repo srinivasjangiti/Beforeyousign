@@ -238,7 +238,7 @@ export default function UserDashboard() {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        setIsLoaded(true);
+        const timer = setTimeout(() => setIsLoaded(true), 10);
         // Fetch dashboard data
         fetch('/api/dashboard')
             .then(res => res.json())
@@ -279,7 +279,7 @@ export default function UserDashboard() {
                         <span className="px-2 py-0.5 bg-stone-900 text-white text-[10px] font-bold">LIVE</span>
                     </div>
                     <h1 className="text-4xl font-bold text-stone-900 mb-2">Welcome back</h1>
-                    <p className="text-stone-600">Here's an overview of your contract portfolio and recent activity.</p>
+                    <p className="text-stone-600">Here&apos;s an overview of your contract portfolio and recent activity.</p>
                 </div>
 
                 {/* Quick Actions */}

@@ -175,7 +175,7 @@ export default function TemplateCustomizationWizard({ template, onClose }: Templ
           <div className="mb-2">
             <p className="text-stone-300 text-sm mb-1">{template.name}</p>
             <div className="w-full bg-stone-700 h-2 rounded-full overflow-hidden">
-              {/* eslint-disable-next-line react/forbid-dom-props */}
+              { }
               <div 
                 className="bg-amber-400 h-full transition-all duration-300"
                 role="progressbar"
