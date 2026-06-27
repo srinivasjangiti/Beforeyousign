@@ -15,7 +15,7 @@ export function engineResultToResponse(result: EngineResult): NextResponse {
     );
   }
 
-  const response = new NextResponse(result.buffer, {
+  const response = new NextResponse(result.buffer as any, {
     status: 200,
     headers: {
       'Content-Type': result.mimeType,
