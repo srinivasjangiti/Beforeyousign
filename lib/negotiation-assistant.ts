@@ -202,7 +202,7 @@ Format as JSON following this structure:
 
     try {
       const response = await generateText(prompt);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const data = parseJsonResponse<any>(response);
 
       return {
@@ -290,7 +290,7 @@ Format as JSON:
 
     try {
       const response = await generateText(prompt);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return parseJsonResponse<any>(response) as NegotiationPlaybook;
     } catch (error) {
       console.error('Error generating playbook:', error);
@@ -341,7 +341,7 @@ Analyze and provide JSON:
 
     try {
       const response = await generateText(prompt);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return parseJsonResponse<any>(response);
     } catch (error) {
       console.error('Error analyzing leverage:', error);

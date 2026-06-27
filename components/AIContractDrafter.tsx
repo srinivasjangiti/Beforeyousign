@@ -1,5 +1,6 @@
 'use client';
 
+import { safeDownload } from '@/lib/download-utils';
 import { useState } from 'react';
 import { ContractDraftRequest, DraftedContract } from '@/lib/ai-contract-drafter';
 
@@ -327,12 +328,7 @@ export default function AIContractDrafterComponent() {
             <button
               onClick={() => {
                 const blob = new Blob([draftedContract.fullText], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${contractType.replace(/\s+/g, '-')}.txt`;
-                a.click();
-              }}
+                safeDownload(blob, `${contractType.replace(/\s+/g, '-')}.txt`);}}
               className="flex-1 bg-stone-900 text-white py-3 px-6 font-semibold hover:bg-stone-800 transition-all duration-300 uppercase tracking-wide"
             >
               📥 Download Contract

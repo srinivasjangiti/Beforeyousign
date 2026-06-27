@@ -1,5 +1,6 @@
 'use client';
 
+import { safeDownload } from '@/lib/download-utils';
 import { useState, useEffect } from 'react';
 import { 
   Activity, 
@@ -52,27 +53,13 @@ export default function AdminDashboard() {
   const downloadReport = async () => {
     const report = await generateSystemReport();
     const blob = new Blob([report], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `system-report-${Date.now()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    safeDownload(blob, `system-report-${Date.now()}.md`);
   };
 
   const exportData = () => {
     const data = db.exportData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `database-export-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    safeDownload(blob, `database-export-${Date.now()}.json`);
   };
 
   const clearCache = () => {
