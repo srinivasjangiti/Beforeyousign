@@ -13,7 +13,7 @@ export async function executeMerge(
 
   try {
     // 1. Reorder files if necessary based on options
-    let sortedFiles = [...files];
+    const sortedFiles = [...files];
     if (options.sortType === 'byFileName') {
       sortedFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     } else if (options.sortType === 'byDateModified' || options.sortType === 'byDateCreated') {
