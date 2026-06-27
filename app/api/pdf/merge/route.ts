@@ -1,68 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
+import { pdfEngine } from '@/lib/pdf-engine/engine';
+import { validateMergeFiles } from '@/lib/pdf-engine/validators/merge';
+import { engineResultToResponse, handleEngineError } from '../_shared/engine-response';
+import { UploadedFile, MergeOptions, PDFLogger } from '@/lib/pdf-engine/types';
+
+// Simple logger adapter for Next.js
+const consoleLogger: PDFLogger = {
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+};
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
+    const rawFiles = formData.getAll('files') as File[];
 
-    if (!files || files.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 PDF files are required for merging.' },
-        { status: 400 }
-      );
+    // Extract options
+    const sortType = (formData.get('sortType') as MergeOptions['sortType']) || 'orderProvided';
+
+    // 1. Convert File[] to UploadedFile[]
+    const files: UploadedFile[] = [];
+    for (const rf of rawFiles) {
+      if (!(rf instanceof File)) continue;
+      const arrayBuffer = await rf.arrayBuffer();
+      files.push({
+        name: rf.name,
+        mimeType: rf.type,
+        size: rf.size,
+        buffer: new Uint8Array(arrayBuffer),
+      });
     }
 
-    // Create a new PDF document
-    const mergedPdf = await PDFDocument.create();
+    // 2. Validate
+    validateMergeFiles(files);
 
-    // Process each file
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        return NextResponse.json(
-          { error: `File '${file.name}' is not a valid PDF.` },
-          { status: 400 }
-        );
-      }
-
-      const arrayBuffer = await file.arrayBuffer();
-      
-      let pdf: PDFDocument;
-      try {
-        pdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: false });
-      } catch (err: any) {
-        if (err.message?.includes('encrypted') || err.name === 'EncryptedPDFError') {
-          return NextResponse.json(
-            { error: `File '${file.name}' is encrypted and cannot be merged.` },
-            { status: 400 }
-          );
-        }
-        return NextResponse.json(
-          { error: `File '${file.name}' is corrupted or invalid.` },
-          { status: 400 }
-        );
-      }
-
-      const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-      copiedPages.forEach((page) => mergedPdf.addPage(page));
-    }
-
-    // Save the merged PDF
-    const mergedPdfBytes = await mergedPdf.save();
-
-    // Return as downloadable file
-    return new NextResponse(mergedPdfBytes as any, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="merged-${Date.now()}.pdf"`,
-      },
+    // 3. Execute
+    const result = await pdfEngine.merge({
+      requestId: crypto.randomUUID(),
+      files,
+      options: { sortType },
+      logger: consoleLogger,
     });
+
+    // 4. Respond
+    return engineResultToResponse(result);
   } catch (error) {
-    console.error('Merge PDF error:', error);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred while merging PDFs.' },
-      { status: 500 }
-    );
+    return handleEngineError(error);
   }
 }

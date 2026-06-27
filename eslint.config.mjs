@@ -12,7 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "browser-extension/**"
+    "browser-extension/**",
+    "pdf-engine-reference/**"
   ]),
   {
     rules: {
