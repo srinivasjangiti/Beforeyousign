@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, X, FileText, CheckCircle2 } from 'lucide-react';
+import { Upload, X, FileText, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PDFTool } from './data';
 
 interface UploadZoneProps {
@@ -11,6 +11,44 @@ interface UploadZoneProps {
 
 export function UploadZone({ tool, onFilesSelected, selectedFiles, onRemoveFile }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const capabilities = tool.capabilities?.upload;
+
+  const validateFiles = (files: File[]) => {
+    setErrorMsg(null);
+    if (!capabilities) return false;
+
+    // Check multiple
+    if (!capabilities.multiple && selectedFiles.length + files.length > 1) {
+      setErrorMsg("This tool only accepts a single file.");
+      return false;
+    }
+
+    // Check MIME types and Size
+    for (const file of files) {
+      if (capabilities.mime.length > 0 && !capabilities.mime.includes(file.type) && !capabilities.mime.includes(file.name.split('.').pop()?.toLowerCase() || '')) {
+        // Fallback for file extensions if mime type is empty on Windows sometimes
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        const isPdf = ext === 'pdf' && capabilities.mime.includes('application/pdf');
+        const isJpg = (ext === 'jpg' || ext === 'jpeg') && capabilities.mime.includes('image/jpeg');
+        const isPng = ext === 'png' && capabilities.mime.includes('image/png');
+        
+        if (!isPdf && !isJpg && !isPng) {
+          setErrorMsg(`Invalid file type: ${file.name}. Accepted types: ${tool.metadata.supportedInput}`);
+          return false;
+        }
+      }
+
+      const sizeMB = file.size / 1024 / 1024;
+      if (sizeMB > capabilities.maxSizeMB) {
+        setErrorMsg(`File too large: ${file.name}. Max size is ${capabilities.maxSizeMB}MB.`);
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -28,20 +66,36 @@ export function UploadZone({ tool, onFilesSelected, selectedFiles, onRemoveFile 
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFilesSelected(Array.from(e.dataTransfer.files));
+      const newFiles = Array.from(e.dataTransfer.files);
+      if (validateFiles(newFiles)) {
+        onFilesSelected(newFiles);
+      }
     }
-  }, [onFilesSelected]);
+  }, [onFilesSelected, selectedFiles.length, capabilities]);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      onFilesSelected(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files);
+      if (validateFiles(newFiles)) {
+        onFilesSelected(newFiles);
+      }
     }
-  }, [onFilesSelected]);
+    // Reset input value so same file can be selected again if removed
+    e.target.value = '';
+  }, [onFilesSelected, selectedFiles.length, capabilities]);
 
   if (selectedFiles.length > 0) {
     return (
       <div className="bg-white border-2 border-stone-200 rounded-xl p-6 mb-8">
         <h3 className="text-lg font-bold text-stone-900 mb-4">Selected Files</h3>
+        
+        {errorMsg && (
+          <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <p className="font-medium text-sm">{errorMsg}</p>
+          </div>
+        )}
+
         <div className="space-y-3">
           {selectedFiles.map((file, idx) => (
             <div key={idx} className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-lg p-4">
@@ -64,17 +118,20 @@ export function UploadZone({ tool, onFilesSelected, selectedFiles, onRemoveFile 
             </div>
           ))}
         </div>
-        <div className="mt-6 flex justify-end">
-          <label className="cursor-pointer px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-medium transition-colors text-sm">
-            Add More Files
-            <input 
-              type="file" 
-              className="hidden" 
-              multiple 
-              onChange={handleFileInput}
-            />
-          </label>
-        </div>
+        
+        {capabilities?.multiple && (
+          <div className="mt-6 flex justify-end">
+            <label className="cursor-pointer px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-medium transition-colors text-sm">
+              Add More Files
+              <input 
+                type="file" 
+                className="hidden" 
+                multiple={capabilities.multiple}
+                onChange={handleFileInput}
+              />
+            </label>
+          </div>
+        )}
       </div>
     );
   }
@@ -100,28 +157,35 @@ export function UploadZone({ tool, onFilesSelected, selectedFiles, onRemoveFile 
       
       <h3 className="text-2xl font-bold text-stone-900 mb-2">{tool.metadata.title}</h3>
       <p className="text-stone-500 mb-8 max-w-sm mx-auto">
-        Drag and drop your files here, or click the button below to browse your computer.
+        Drag and drop your file{capabilities?.multiple ? 's' : ''} here, or click the button below to browse.
       </p>
 
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg inline-flex items-center gap-3 border border-red-100 text-left">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <p className="font-medium text-sm">{errorMsg}</p>
+        </div>
+      )}
+
       <label className="cursor-pointer inline-flex items-center justify-center px-8 py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl font-bold text-lg shadow-sm hover:shadow-md transition-all active:scale-95">
-        Choose Files
+        Choose File{capabilities?.multiple ? 's' : ''}
         <input 
           type="file" 
           className="hidden" 
-          multiple 
+          multiple={capabilities?.multiple} 
           onChange={handleFileInput}
         />
       </label>
 
-      <div className="mt-8 pt-6 border-t border-stone-200/60 max-w-md mx-auto flex justify-between text-xs text-stone-400">
+      <div className="mt-8 pt-6 border-t border-stone-200/60 max-w-md mx-auto flex flex-wrap justify-center gap-4 text-xs text-stone-400">
         <span className="flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" /> Max size: 50MB
+          <CheckCircle2 className="w-3 h-3" /> Max size: {capabilities?.maxSizeMB || 50}MB
         </span>
         <span className="flex items-center gap-1">
           <CheckCircle2 className="w-3 h-3" /> Supports: {tool.metadata.supportedInput}
         </span>
         <span className="flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" /> Encrypted transfers
+          <CheckCircle2 className="w-3 h-3" /> Local processing
         </span>
       </div>
     </div>

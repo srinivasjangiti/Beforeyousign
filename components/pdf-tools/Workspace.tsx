@@ -4,60 +4,61 @@ import { UploadZone } from './UploadZone';
 import { ProgressCard } from './ProgressCard';
 import { ResultCard } from './ResultCard';
 import { ErrorCard } from './ErrorCard';
+import { ArrowLeft } from 'lucide-react';
 
 interface WorkspaceProps {
-  tool: PDFTool | null;
+  tool: PDFTool;
   step: WorkflowStep;
   setStep: (step: WorkflowStep) => void;
+  onBack: () => void;
 }
 
-export function Workspace({ tool, step, setStep }: WorkspaceProps) {
+export function Workspace({ tool, step, setStep, onBack }: WorkspaceProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
+  // Dynamic options state
+  const [optionsState, setOptionsState] = useState<Record<string, string>>({});
+  
   // Progress states: 'preparing', 'uploading', 'processing', 'downloading', 'complete'
   const [progressStage, setProgressStage] = useState('preparing');
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    // When tool changes, reset state and scroll to workspace
-    if (tool) {
-      setSelectedFiles([]);
-      setResultBlob(null);
-      setErrorMsg(null);
-      setStep('upload');
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    } else {
-      setStep('choose');
+    // When tool changes, reset state
+    setSelectedFiles([]);
+    setResultBlob(null);
+    setErrorMsg(null);
+    setStep('upload');
+    
+    // Initialize default options
+    const initialOptions: Record<string, string> = {};
+    if (tool.capabilities?.options) {
+      tool.capabilities.options.forEach(opt => {
+        if (opt.defaultValue) {
+          initialOptions[opt.id] = opt.defaultValue;
+        }
+      });
     }
+    setOptionsState(initialOptions);
   }, [tool, setStep]);
-
-  if (!tool) {
-    return (
-      <div className="w-full max-w-7xl mx-auto mt-8 text-center text-stone-500 py-32 bg-stone-100/50 border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center transition-all duration-300">
-        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm">
-          <svg className="w-10 h-10 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <h3 className="text-2xl font-bold text-stone-900 mb-3">Choose a tool to begin</h3>
-        <p className="max-w-md mx-auto">Select any of the available PDF tools from the grid above to activate this workspace. No files are ever sent to external servers.</p>
-      </div>
-    );
-  }
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(prev => [...prev, ...files]);
-    setStep('configure'); 
+    if (tool.capabilities?.options && tool.capabilities.options.length > 0) {
+      setStep('configure');
+    } else {
+      setStep('configure'); // Still go to configure to let user press Process
+    }
+  };
+
+  const handleOptionChange = (id: string, value: string) => {
+    setOptionsState(prev => ({ ...prev, [id]: value }));
   };
 
   const executeApi = async () => {
-    if (!tool.api) {
-      setErrorMsg("This tool is not yet implemented on the backend.");
+    if (!tool.capabilities?.api) {
+      setErrorMsg("This tool's API is not configured in the registry.");
       return;
     }
 
@@ -65,25 +66,21 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
       setProgressStage('preparing');
       const formData = new FormData();
       
-      // Append files according to capabilities
-      if (tool.capabilities?.multipleFiles) {
+      if (tool.capabilities.upload.multiple) {
         selectedFiles.forEach(f => formData.append('files', f));
       } else {
         formData.append('file', selectedFiles[0]);
       }
 
-      // Append default tool-specific options (can be wired to a real ToolOptions component later)
-      if (tool.id === 'split-pdf') formData.append('pages', '1');
-      if (tool.id === 'rotate-pdf') {
-        formData.append('rotation', '90');
-        formData.append('pages', 'all');
-      }
-      if (tool.id === 'compress-pdf') formData.append('quality', '75');
+      // Append dynamic options
+      Object.entries(optionsState).forEach(([key, val]) => {
+        formData.append(key, val);
+      });
 
       setProgressStage('uploading');
       
-      const response = await fetch(tool.api.endpoint, {
-        method: tool.api.method,
+      const response = await fetch(tool.capabilities.api.endpoint, {
+        method: tool.capabilities.api.method,
         body: formData
       });
 
@@ -102,14 +99,18 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
 
       setProgressStage('downloading');
       
-      if (tool.api.responseType === 'blob') {
+      if (tool.capabilities.api.responseType === 'blob') {
         const blob = await response.blob();
+        
+        // Ensure we preserve headers if possible, but JS fetch can't read X-Original-Size due to CORS usually, 
+        // however since this is same-origin, we could read it if we wanted. 
+        // For now, the blob size is good enough for the result card.
+        
         setResultBlob(blob);
         setProgressStage('complete');
         setStep('result');
       } else {
-        // Handle JSON response if ever supported
-        throw new Error("JSON response type not supported in this flow yet.");
+        throw new Error("JSON response type not supported in this unified flow.");
       }
 
     } catch (err: any) {
@@ -123,14 +124,6 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
     executeApi();
   };
 
-  const handleReset = () => {
-    setSelectedFiles([]);
-    setResultBlob(null);
-    setErrorMsg(null);
-    setStep('choose');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleProcessAnother = () => {
     setSelectedFiles([]);
     setResultBlob(null);
@@ -138,12 +131,29 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
     setStep('upload');
   };
 
+  if (!tool.capabilities) {
+    return (
+      <div className="w-full text-center py-24 bg-white rounded-2xl shadow-sm border border-stone-200">
+        <h3 className="text-2xl font-bold text-stone-900 mb-2">Coming Soon</h3>
+        <p className="text-stone-500 mb-6">This feature is currently under development.</p>
+        <button onClick={onBack} className="px-6 py-2 bg-stone-100 hover:bg-stone-200 rounded-xl font-medium">
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div 
-      key={tool.id}
-      ref={containerRef}
-      className="w-full max-w-7xl mx-auto mt-8 animate-in slide-in-from-bottom-4 fade-in duration-500 ease-out"
-    >
+    <div className="w-full animate-in slide-in-from-bottom-4 fade-in duration-500 ease-out">
+      
+      {/* Back Button */}
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-stone-500 hover:text-stone-900 mb-6 font-medium transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Tools
+      </button>
+
       {/* Workspace Header */}
       <div className="bg-stone-900 text-white rounded-t-2xl p-8 shadow-lg">
         <div className="flex items-center gap-4 mb-6">
@@ -155,21 +165,6 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
             <p className="text-stone-300">{tool.metadata.description}</p>
           </div>
         </div>
-        
-        <div className="flex flex-wrap gap-6 text-sm text-stone-300 border-t border-white/10 pt-6">
-          <div>
-            <span className="block text-white/50 mb-1 text-xs uppercase tracking-wider font-bold">Supported Input</span>
-            <span className="font-medium text-white">{tool.metadata.supportedInput}</span>
-          </div>
-          <div>
-            <span className="block text-white/50 mb-1 text-xs uppercase tracking-wider font-bold">Output Format</span>
-            <span className="font-medium text-white">{tool.metadata.expectedOutput}</span>
-          </div>
-          <div>
-            <span className="block text-white/50 mb-1 text-xs uppercase tracking-wider font-bold">Avg. Processing Time</span>
-            <span className="font-medium text-white">{tool.metadata.estimatedTime}</span>
-          </div>
-        </div>
       </div>
 
       {/* Workspace Body */}
@@ -179,16 +174,11 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
             tool={tool} 
             error={errorMsg} 
             onRetry={handleProcess} 
-            onChangeTool={handleReset} 
+            onChangeTool={onBack} 
           />
-        ) : !tool.capabilities?.implemented ? (
-          <div className="text-center py-24">
-            <h3 className="text-2xl font-bold text-stone-900 mb-2">Coming Soon</h3>
-            <p className="text-stone-500">This feature is currently under development.</p>
-          </div>
         ) : (
           <>
-            {step === 'upload' && tool.capabilities?.upload && (
+            {step === 'upload' && (
               <UploadZone 
                 tool={tool} 
                 selectedFiles={selectedFiles}
@@ -198,13 +188,42 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
             )}
 
             {step === 'configure' && (
-              <div className="max-w-2xl mx-auto text-center py-12 animate-in fade-in">
-                <h3 className="text-xl font-bold mb-8">Ready to Process</h3>
+              <div className="max-w-2xl mx-auto py-8 animate-in fade-in">
                 
-                {tool.capabilities?.configurable && (
-                  <div className="mb-8 p-6 bg-stone-50 border border-stone-200 rounded-xl text-left">
-                    <p className="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-2">Options</p>
-                    <p className="text-stone-700">Default settings will be applied automatically.</p>
+                {tool.capabilities.options && tool.capabilities.options.length > 0 && (
+                  <div className="mb-8 p-6 bg-stone-50 border border-stone-200 rounded-xl text-left shadow-sm">
+                    <h3 className="text-lg font-bold text-stone-900 mb-6">Tool Options</h3>
+                    <div className="space-y-6">
+                      {tool.capabilities.options.map(opt => (
+                        <div key={opt.id} className="flex flex-col gap-2">
+                          <label htmlFor={opt.id} className="font-semibold text-stone-700">
+                            {opt.label}
+                          </label>
+                          {opt.type === 'text' && (
+                            <input 
+                              type="text"
+                              id={opt.id}
+                              className="px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 outline-none"
+                              placeholder={opt.placeholder}
+                              value={optionsState[opt.id] || ''}
+                              onChange={(e) => handleOptionChange(opt.id, e.target.value)}
+                            />
+                          )}
+                          {opt.type === 'select' && opt.options && (
+                            <select
+                              id={opt.id}
+                              className="px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 outline-none bg-white"
+                              value={optionsState[opt.id] || ''}
+                              onChange={(e) => handleOptionChange(opt.id, e.target.value)}
+                            >
+                              {opt.options.map(o => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
@@ -228,11 +247,11 @@ export function Workspace({ tool, step, setStep }: WorkspaceProps) {
               <ProgressCard tool={tool} stage={progressStage} />
             )}
 
-            {step === 'result' && resultBlob && tool.capabilities?.download && (
+            {step === 'result' && resultBlob && (
               <ResultCard 
                 tool={tool} 
                 blob={resultBlob}
-                onReset={handleReset} 
+                onReset={onBack} 
                 onProcessAnother={handleProcessAnother} 
               />
             )}

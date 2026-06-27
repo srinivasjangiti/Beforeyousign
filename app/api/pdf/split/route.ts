@@ -5,17 +5,47 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const pages = formData.get('pages') as string; // e.g., "1-3,5,7-10"
+    const pages = formData.get('pages') as string;
 
     if (!file) {
       return NextResponse.json(
-        { error: 'PDF file required' },
+        { error: 'A PDF file is required.' },
+        { status: 400 }
+      );
+    }
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      return NextResponse.json(
+        { error: 'The uploaded file is not a valid PDF.' },
+        { status: 400 }
+      );
+    }
+
+    if (!pages || pages.trim() === '') {
+      return NextResponse.json(
+        { error: 'Page ranges are required.' },
         { status: 400 }
       );
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    let pdfDoc: PDFDocument;
+    
+    try {
+      pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: false });
+    } catch (err: any) {
+      if (err.message?.includes('encrypted') || err.name === 'EncryptedPDFError') {
+        return NextResponse.json(
+          { error: 'The PDF is encrypted. Unlock it first before splitting.' },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json(
+        { error: 'The PDF file is corrupted or invalid.' },
+        { status: 400 }
+      );
+    }
+    
     const totalPages = pdfDoc.getPageCount();
 
     // Parse page ranges
@@ -23,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     if (pageIndices.length === 0) {
       return NextResponse.json(
-        { error: 'No valid pages specified' },
+        { error: `No valid pages found in range. The document has ${totalPages} pages.` },
         { status: 400 }
       );
     }
@@ -35,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     const pdfBytes = await newPdf.save();
 
-    return new NextResponse(Buffer.from(pdfBytes), {
+    return new NextResponse(pdfBytes as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="split-${Date.now()}.pdf"`,
@@ -44,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Split PDF error:', error);
     return NextResponse.json(
-      { error: 'Failed to split PDF' },
+      { error: 'An unexpected error occurred while splitting the PDF.' },
       { status: 500 }
     );
   }
@@ -56,8 +86,15 @@ function parsePageRanges(ranges: string, totalPages: number): number[] {
 
   for (const part of parts) {
     const trimmed = part.trim();
+    if (!trimmed) continue;
+    
     if (trimmed.includes('-')) {
-      const [start, end] = trimmed.split('-').map(s => parseInt(s.trim()));
+      const [startStr, endStr] = trimmed.split('-');
+      const start = parseInt(startStr.trim());
+      const end = parseInt(endStr.trim());
+      
+      if (isNaN(start) || isNaN(end)) continue;
+      
       for (let i = start; i <= end && i <= totalPages; i++) {
         if (i > 0 && !indices.includes(i - 1)) {
           indices.push(i - 1); // Convert to 0-based index
@@ -65,7 +102,7 @@ function parsePageRanges(ranges: string, totalPages: number): number[] {
       }
     } else {
       const page = parseInt(trimmed);
-      if (page > 0 && page <= totalPages && !indices.includes(page - 1)) {
+      if (!isNaN(page) && page > 0 && page <= totalPages && !indices.includes(page - 1)) {
         indices.push(page - 1);
       }
     }
