@@ -14,7 +14,7 @@ export function ResultCard({ tool, blob, onReset, onProcessAnother }: ResultCard
   const handleDownload = () => {
     // Determine extension based on metadata or hardcode to tool output
     const ext = tool.id === 'pdf-to-jpg' ? 'zip' : 'pdf';
-    const prefix = tool.api?.downloadFilenamePrefix || 'output';
+    const prefix = tool.capabilities?.api?.downloadFilenamePrefix || 'output';
     safeDownload(blob, `${prefix}-${Date.now()}.${ext}`);
   };
 
