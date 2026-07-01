@@ -51,9 +51,9 @@ const primaryServices: Array<{ name: string; href: string; icon: any; hasMegaMen
   { name: 'Contracts', href: '/contracts', icon: FolderOpen },
   { name: 'Templates', href: '/templates-enhanced', icon: BookTemplate },
   { name: 'Builder', href: '/template-builder', icon: BookTemplate },
-  { name: 'Research', href: '/research', icon: Brain },
   { name: 'E-Signature', href: '/esignature', icon: FileSignature },
   { name: 'Library', href: '/library', icon: BookOpen, hasMegaMenu: true },
+  { name: 'Research', href: '/research', icon: Brain },
 ];
 
 // Secondary navigation items
