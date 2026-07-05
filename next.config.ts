@@ -22,7 +22,7 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' blob: data: https:",
       "connect-src 'self' https://integrate.api.nvidia.com https://clerk.clerk.services https://*.clerk.accounts.dev wss://*.clerk.accounts.dev",
-      "frame-src 'none'",
+      "frame-src 'self'",
     ].join("; "),
   },
 ];
