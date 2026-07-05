@@ -23,6 +23,7 @@ const securityHeaders = [
       "img-src 'self' blob: data: https:",
       "connect-src 'self' https://integrate.api.nvidia.com https://clerk.clerk.services https://*.clerk.accounts.dev wss://*.clerk.accounts.dev",
       "frame-src 'self'",
+      "object-src 'self'",
     ].join("; "),
   },
 ];

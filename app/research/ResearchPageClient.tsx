@@ -232,11 +232,11 @@ export default function ResearchPageClient() {
             </div>
 
             <div className="bg-white border-2 border-stone-200 overflow-hidden">
-              <iframe
+              <embed
                 src="/research-paper.pdf#toolbar=0&view=FitH"
+                type="application/pdf"
                 className="w-full h-[600px] sm:h-[700px]"
                 title="Research Paper: Faithfulness, Robustness, and Generalization in Chain-of-Thought Reasoning"
-                loading="lazy"
                 aria-label="PDF preview of research paper"
               />
               <div className="p-4 bg-stone-50 border-t border-stone-200 text-center">
