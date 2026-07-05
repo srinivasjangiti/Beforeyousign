@@ -146,16 +146,12 @@ export default function Footer() {
           <div className="rounded-xl bg-gradient-to-br from-stone-800 via-stone-800 to-stone-900 border border-stone-700 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             {/* Left: identity */}
             <div className="flex items-center gap-4">
-              {/* Avatar monogram */}
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #78716c 0%, #44403c 100%)",
-                }}
-              >
-                SJ
-              </div>
+              {/* Avatar photo */}
+              <img
+                src="/srinivas-jangiti.png"
+                alt="Srinivas Jangiti"
+                className="w-11 h-11 rounded-full object-cover object-top flex-shrink-0 ring-2 ring-stone-600"
+              />
               <div>
                 <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">
                   Built by
