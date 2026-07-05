@@ -3,6 +3,7 @@
 import { FileText, Download, Copy, Calendar, Tag, BookOpen, ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import PDFViewer from '@/components/PDFViewer';
 
 const paperData = {
   title: 'Faithfulness, Robustness, and Generalization in Chain-of-Thought Reasoning',
@@ -231,25 +232,11 @@ export default function ResearchPageClient() {
               <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-2">Embedded Document Viewer</h2>
             </div>
 
-            <div className="bg-white border-2 border-stone-200 overflow-hidden">
-              <embed
-                src="/research-paper.pdf#toolbar=0&view=FitH"
-                type="application/pdf"
-                className="w-full h-[600px] sm:h-[700px]"
-                title="Research Paper: Faithfulness, Robustness, and Generalization in Chain-of-Thought Reasoning"
-                aria-label="PDF preview of research paper"
-              />
-              <div className="p-4 bg-stone-50 border-t border-stone-200 text-center">
-                <a
-                  href="/research-paper.pdf"
-                  download="faithfulness-robustness-cot-reasoning.pdf"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download full paper for best viewing experience</span>
-                </a>
-              </div>
-            </div>
+            <PDFViewer
+              src="/research-paper.pdf"
+              downloadHref="/research-paper.pdf"
+              downloadFilename="faithfulness-robustness-cot-reasoning.pdf"
+            />
           </div>
         </div>
       </section>
