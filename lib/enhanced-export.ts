@@ -221,7 +221,7 @@ export function exportAsHTML(
         analysis.riskScore >= 25 ? '#ca8a04' :
           '#16a34a';
 
-  let html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">

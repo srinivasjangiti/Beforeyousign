@@ -1,73 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
-import sharp from 'sharp';
+import { pdfEngine } from '@/lib/pdf-engine/engine';
+import { validateImageFiles } from '@/lib/pdf-engine/validators/image';
+import { engineResultToResponse, handleEngineError } from '../_shared/engine-response';
+import { UploadedFile, ImageOptions, PDFLogger } from '@/lib/pdf-engine/types';
+
+const consoleLogger: PDFLogger = {
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+};
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
-    const pageSize = formData.get('pageSize') as string || 'A4'; // A4, Letter, etc.
+    const rawFiles = formData.getAll('files') as File[];
+    const pageSize = formData.get('pageSize') as string || 'A4';
+    const format = pageSize.toLowerCase() === 'letter' ? 'Letter' : 'A4';
 
-    if (files.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one image file required' },
-        { status: 400 }
-      );
-    }
-
-    const pdfDoc = await PDFDocument.create();
-
-    for (const file of files) {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // Determine image type and embed
-      let image;
-      if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
-        image = await pdfDoc.embedPng(buffer);
-      } else if (file.type === 'image/jpeg' || file.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
-        image = await pdfDoc.embedJpg(buffer);
-      } else {
-        // Convert other formats to JPEG using sharp
-        const converted = await sharp(buffer).jpeg({ quality: 90 }).toBuffer();
-        image = await pdfDoc.embedJpg(converted);
-      }
-
-      // Add page with image
-      const page = pdfDoc.addPage();
-      const { width, height } = page.getSize();
-      
-      // Scale image to fit page while maintaining aspect ratio
-      const imgDims = image.scale(1);
-      const scale = Math.min(
-        (width - 40) / imgDims.width,
-        (height - 40) / imgDims.height
-      );
-
-      const scaledWidth = imgDims.width * scale;
-      const scaledHeight = imgDims.height * scale;
-
-      page.drawImage(image, {
-        x: (width - scaledWidth) / 2,
-        y: (height - scaledHeight) / 2,
-        width: scaledWidth,
-        height: scaledHeight,
+    // 1. Convert File[] to UploadedFile[]
+    const files: UploadedFile[] = [];
+    for (const rf of rawFiles) {
+      if (!(rf instanceof File)) continue;
+      const arrayBuffer = await rf.arrayBuffer();
+      files.push({
+        name: rf.name,
+        mimeType: rf.type,
+        size: rf.size,
+        buffer: new Uint8Array(arrayBuffer),
       });
     }
 
-    const pdfBytes = await pdfDoc.save();
+    // 2. Validate
+    validateImageFiles(files);
 
-    return new NextResponse(Buffer.from(pdfBytes), {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="images-to-pdf-${Date.now()}.pdf"`,
-      },
+    // 3. Execute
+    const result = await pdfEngine.imageToPdf({
+      requestId: crypto.randomUUID(),
+      files,
+      options: { format: format as ImageOptions['format'] },
+      logger: consoleLogger,
     });
+
+    // 4. Respond
+    return engineResultToResponse(result);
   } catch (error) {
-    console.error('Image to PDF error:', error);
-    return NextResponse.json(
-      { error: 'Failed to convert images to PDF: ' + (error as Error).message },
-      { status: 500 }
-    );
+    return handleEngineError(error);
   }
 }

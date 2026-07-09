@@ -1,44 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
+import { pdfEngine } from '@/lib/pdf-engine/engine';
+import { validateMergeFiles } from '@/lib/pdf-engine/validators/merge';
+import { engineResultToResponse, handleEngineError } from '../_shared/engine-response';
+import { UploadedFile, MergeOptions, PDFLogger } from '@/lib/pdf-engine/types';
+
+// Simple logger adapter for Next.js
+const consoleLogger: PDFLogger = {
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+};
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
+    const rawFiles = formData.getAll('files') as File[];
 
-    if (files.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 PDF files required for merging' },
-        { status: 400 }
-      );
+    // Extract options
+    const sortType = (formData.get('sortType') as MergeOptions['sortType']) || 'orderProvided';
+
+    // 1. Convert File[] to UploadedFile[]
+    const files: UploadedFile[] = [];
+    for (const rf of rawFiles) {
+      if (!(rf instanceof File)) continue;
+      const arrayBuffer = await rf.arrayBuffer();
+      files.push({
+        name: rf.name,
+        mimeType: rf.type,
+        size: rf.size,
+        buffer: new Uint8Array(arrayBuffer),
+      });
     }
 
-    // Create a new PDF document
-    const mergedPdf = await PDFDocument.create();
+    // 2. Validate
+    validateMergeFiles(files);
 
-    // Process each file
-    for (const file of files) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await PDFDocument.load(arrayBuffer);
-      const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-      copiedPages.forEach((page) => mergedPdf.addPage(page));
-    }
-
-    // Save the merged PDF
-    const mergedPdfBytes = await mergedPdf.save();
-
-    // Return as downloadable file
-    return new NextResponse(mergedPdfBytes as any, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="merged-${Date.now()}.pdf"`,
-      },
+    // 3. Execute
+    const result = await pdfEngine.merge({
+      requestId: crypto.randomUUID(),
+      files,
+      options: { sortType },
+      logger: consoleLogger,
     });
+
+    // 4. Respond
+    return engineResultToResponse(result);
   } catch (error) {
-    console.error('Merge PDF error:', error);
-    return NextResponse.json(
-      { error: 'Failed to merge PDFs' },
-      { status: 500 }
-    );
+    return handleEngineError(error);
   }
 }

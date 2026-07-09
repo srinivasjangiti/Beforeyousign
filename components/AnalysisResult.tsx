@@ -1,5 +1,6 @@
 'use client';
 
+import { safeDownload } from '@/lib/download-utils';
 import { ContractAnalysis } from '@/lib/types';
 import { AlertTriangle, CheckCircle, XCircle, Info, Download, TrendingUp, TrendingDown, Minus, Scale, FileText, MessageSquare, Send, X, Filter, Eye, EyeOff, Sparkles, Share2, Copy, Check, Link2, HelpCircle, Command, Bookmark, BookmarkCheck, StickyNote, Briefcase, Mail, Lightbulb, Loader2, Upload, Search, Printer, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { clauseAlternatives } from '@/lib/templates-data';
@@ -99,6 +100,9 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
 
   // NEW: Executive Report
   const [showExecutiveReport, setShowExecutiveReport] = useState(false);
+
+  // NEW: Browse Alternatives Modal
+  const [showAllAlternatives, setShowAllAlternatives] = useState(false);
 
   // NEW: ML Semantic Similarity
   const [similarClauses, setSimilarClauses] = useState<Record<string, { results: any[], predictedCategory: string, confidence: number, recommendedAlternative?: any }>>({});
@@ -829,11 +833,38 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to analyze comparison file');
+        throw new Error('Failed to analyze comparison file');
       }
 
-      const newAnalysis = await response.json();
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let newAnalysis = null;
+
+      if (reader) {
+        let done = false;
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.type === 'complete') {
+                    newAnalysis = data.analysis;
+                  } else if (data.type === 'error') {
+                    throw new Error(data.message);
+                  }
+                } catch (e) {
+                  // Ignore JSON parse errors for incomplete chunks in SSE
+                }
+              }
+            }
+          }
+        }
+      }
 
       if (!newAnalysis || !newAnalysis.clauses) {
         throw new Error('Invalid analysis result from server');
@@ -1311,12 +1342,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                       onClick={() => {
                         const fullContent = `# Negotiation Script\n\nPriority: ${negotiationScript.priorityLevel}\n\n## Email Template\n\n${negotiationScript.emailTemplate}\n\n## Talking Points\n\n${negotiationScript.talkingPoints.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')}\n\n## Strategies\n\n${negotiationScript.negotiationStrategies.map((s: string) => `- ${s}`).join('\n')}\n\n## Alternative Language\n\n${negotiationScript.alternativeLanguage}`;
                         const blob = new Blob([fullContent], { type: 'text/markdown' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `negotiation-${selectedClauseForNegotiation?.replace(/[^a-zA-Z0-9]/g, '-')}.md`;
-                        a.click();
-                      }}
+                        safeDownload(blob, `negotiation-${selectedClauseForNegotiation?.replace(/[^a-zA-Z0-9]/g, '-')}.md`);}}
                       className="w-full bg-stone-900 text-white py-3 font-semibold hover:bg-stone-800 transition-colors"
                     >
                       Download Script
@@ -3546,12 +3572,67 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
             </div>
 
             <div className="mt-8 text-center">
-              <button className="inline-flex items-center gap-2 px-8 py-4 bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors duration-300">
+              <button 
+                onClick={() => setShowAllAlternatives(true)}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors duration-300">
                 <FileText className="w-5 h-5" />
                 Browse All {clauseAlternatives.length} Fair Alternatives
               </button>
             </div>
           </div>
+
+          {/* Browse All Alternatives Modal */}
+          {showAllAlternatives && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowAllAlternatives(false)}>
+              <div className="bg-white border-2 border-stone-900 max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="sticky top-0 bg-white border-b-2 border-stone-900 p-6 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-stone-900 flex items-center gap-3">
+                      <FileText className="w-6 h-6 text-purple-600" />
+                      Community-Vetted Fair Alternatives
+                    </h3>
+                  </div>
+                  <button onClick={() => setShowAllAlternatives(false)} className="hover:bg-stone-100 p-2 rounded">
+                    <X className="w-6 h-6 text-stone-500" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  {clauseAlternatives.map((alternative) => (
+                    <div key={alternative.id} className="border-2 border-stone-200 rounded-xl overflow-hidden hover:border-purple-300 transition-colors">
+                      <div className="bg-stone-50 p-4 border-b-2 border-stone-200 flex justify-between items-center">
+                        <span className="font-mono text-sm text-stone-600 uppercase tracking-widest">{alternative.source.replace('_', ' ')}</span>
+                        <div className="flex gap-2">
+                          <span className="px-3 py-1 bg-green-100 text-green-700 font-bold text-xs rounded-full">
+                            Risk: Low
+                          </span>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 font-bold text-xs rounded-full flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            {alternative.votes.toLocaleString()} votes
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <div className="mb-6">
+                          <p className="text-xs text-stone-500 uppercase tracking-wider font-bold mb-2">Recommended Clause Text</p>
+                          <p className="text-stone-900 leading-relaxed font-serif text-lg">
+                            &quot;{alternative.fairerVersion}&quot;
+                          </p>
+                        </div>
+                        <div className="bg-purple-50 border border-purple-200 p-4 rounded">
+                          <p className="text-xs text-purple-900 uppercase tracking-wider font-bold mb-2">Why This Is Better</p>
+                          <p className="text-sm text-purple-800 leading-relaxed">{alternative.explanation}</p>
+                          {alternative.contributor && (
+                            <p className="text-xs text-purple-600 mt-3 italic">&mdash; {alternative.contributor}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Version Comparison Modal */}
           {showCompareModal && (
@@ -3771,12 +3852,7 @@ export default function AnalysisResult({ analysis }: AnalysisResultProps) {
                             const { generateComparisonReport } = await import('@/lib/version-compare');
                             const report = generateComparisonReport(comparisonResult);
                             const blob = new Blob([report], { type: 'text/markdown' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `comparison-report-${Date.now()}.md`;
-                            a.click();
-                            URL.revokeObjectURL(url);
+                            safeDownload(blob, `comparison-report-${Date.now()}.md`);
                           }}
                           className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
                         >

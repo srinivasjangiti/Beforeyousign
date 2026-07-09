@@ -1,54 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument, degrees } from 'pdf-lib';
+import { pdfEngine } from '@/lib/pdf-engine/engine';
+import { validateRotateFile } from '@/lib/pdf-engine/validators/rotate';
+import { engineResultToResponse, handleEngineError } from '../_shared/engine-response';
+import { UploadedFile, PDFLogger } from '@/lib/pdf-engine/types';
+
+const consoleLogger: PDFLogger = {
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+};
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const rotation = parseInt(formData.get('rotation') as string) || 90; // 90, 180, 270
-    const pages = formData.get('pages') as string; // "all" or "1,3,5"
+    const rawFile = formData.get('file') as File;
+    const rotationStr = formData.get('rotation') as string;
+    const pagesStr = formData.get('pages') as string;
 
-    if (!file) {
-      return NextResponse.json(
-        { error: 'PDF file required' },
-        { status: 400 }
-      );
+    const angle = parseInt(rotationStr, 10) || 90;
+    const pages = pagesStr || 'all';
+
+    // 1. Convert File to UploadedFile
+    let uploadedFile: UploadedFile | undefined;
+    if (rawFile instanceof File) {
+      const arrayBuffer = await rawFile.arrayBuffer();
+      uploadedFile = {
+        name: rawFile.name,
+        mimeType: rawFile.type,
+        size: rawFile.size,
+        buffer: new Uint8Array(arrayBuffer),
+      };
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const totalPages = pdfDoc.getPageCount();
+    // 2. Validate
+    validateRotateFile(uploadedFile as UploadedFile, { angle, pages });
 
-    // Determine which pages to rotate
-    const pageIndices = pages === 'all' 
-      ? Array.from({ length: totalPages }, (_, i) => i)
-      : parsePages(pages, totalPages);
-
-    // Rotate specified pages
-    for (const index of pageIndices) {
-      const page = pdfDoc.getPage(index);
-      page.setRotation(degrees(rotation));
-    }
-
-    const rotatedBytes = await pdfDoc.save();
-
-    return new NextResponse(Buffer.from(rotatedBytes), {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="rotated-${Date.now()}.pdf"`,
-      },
+    // 3. Execute
+    const result = await pdfEngine.rotate({
+      requestId: crypto.randomUUID(),
+      files: [uploadedFile as UploadedFile],
+      options: { angle, pages },
+      logger: consoleLogger,
     });
-  } catch (error) {
-    console.error('Rotate PDF error:', error);
-    return NextResponse.json(
-      { error: 'Failed to rotate PDF' },
-      { status: 500 }
-    );
-  }
-}
 
-function parsePages(pages: string, totalPages: number): number[] {
-  return pages.split(',')
-    .map(p => parseInt(p.trim()) - 1)
-    .filter(i => i >= 0 && i < totalPages);
+    // 4. Respond
+    return engineResultToResponse(result);
+  } catch (error) {
+    return handleEngineError(error);
+  }
 }

@@ -17,10 +17,6 @@ export default function PredictiveAnalyticsDashboard() {
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [timeframe]);
-
   const loadAnalytics = async () => {
     setLoading(true);
     

@@ -8,6 +8,7 @@
  * Provides single, consistent API for all export operations
  */
 
+import { safeDownload } from '@/lib/download-utils';
 import { exportAsPDF as basicPDF, exportAsDOCX as basicDOCX, exportAsMarkdown as basicMarkdown } from './export-utils';
 import { AdvancedExportEngine } from './advanced-export-integrations';
 import type { ExportOptions } from './template-types';
@@ -76,14 +77,7 @@ export class ExportManager {
   private downloadAsHTML(content: string, filename: string): void {
     const html = this.convertToHTML(content);
     const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename.replace(/\s+/g, '-')}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    safeDownload(blob, `${filename.replace(/\s+/g, '-')}.html`);
   }
 
   /**
@@ -91,14 +85,7 @@ export class ExportManager {
    */
   private downloadAsText(content: string, filename: string): void {
     const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename.replace(/\s+/g, '-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    safeDownload(blob, `${filename.replace(/\s+/g, '-')}.txt`);
   }
 
   /**

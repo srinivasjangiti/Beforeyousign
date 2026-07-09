@@ -3,7 +3,10 @@ import { findSimilarClause } from '@/lib/ml/retrieval';
 
 export async function POST(request: Request) {
   try {
-    const { text, topK = 3, currentRiskScore } = await request.json();
+    const body = await request.json();
+    const text = body.text;
+    const topK = Math.min(body.topK || 3, 100);
+    const currentRiskScore = body.currentRiskScore;
     
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });

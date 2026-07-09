@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getEmbeddingsBatch } from '@/lib/ml/embeddings';
 import { kMeans, euclideanDistance } from '@/lib/ml/clustering';
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {

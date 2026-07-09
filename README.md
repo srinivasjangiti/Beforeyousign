@@ -1,5 +1,5 @@
 # BeforeYouSign
-
+Website Link: https://beforeyousign.vercel.app
 BeforeYouSign is a state-of-the-art, AI-powered legal intelligence platform designed to democratize legal expertise. The platform uses a serverless dual-pipeline architecture: generative AI (Llama 3.1 405B) handles deep textual extraction, while a localized ONNX transformer pipeline (MiniLM) powers deterministic risk benchmarking and semantic search.
 
 ## 📌 Quick Links for Reviewers & Recruiters

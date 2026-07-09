@@ -53,6 +53,7 @@ const primaryServices: Array<{ name: string; href: string; icon: any; hasMegaMen
   { name: 'Builder', href: '/template-builder', icon: BookTemplate },
   { name: 'E-Signature', href: '/esignature', icon: FileSignature },
   { name: 'Library', href: '/library', icon: BookOpen, hasMegaMenu: true },
+  { name: 'Research', href: '/research', icon: Brain },
 ];
 
 // Secondary navigation items
@@ -218,6 +219,7 @@ const allSearchableContent = [
   { name: 'Finance', category: 'Industry Guides', href: '/library#industry-guidance' },
   { name: 'Analyze Contract', category: 'Tools', href: '/analyze' },
   { name: 'Templates', category: 'Tools', href: '/templates' },
+  { name: 'Research Paper', category: 'Tools', href: '/research' },
   { name: 'Compare Versions', category: 'Tools', href: '/compare' },
   { name: 'Contract Chat', category: 'Tools', href: '/chat' },
   { name: 'Playbooks', category: 'Tools', href: '/playbooks' }

@@ -3,6 +3,7 @@
  * Provides PDF and DOCX export functionality for templates
  */
 
+import { safeDownload } from '@/lib/download-utils';
 import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 
@@ -219,7 +220,7 @@ export async function exportAsDOCX(templateName: string, content: string): Promi
             const runs: TextRun[] = [];
             
             // Simple bold/italic parsing
-            let processedText = line;
+            const processedText = line;
             const boldMatches = line.match(/\*\*([^*]+)\*\*/g);
             
             if (boldMatches) {
@@ -286,14 +287,7 @@ export async function exportAsDOCX(templateName: string, content: string): Promi
 
   // Generate and download
   const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${templateName.replace(/\s+/g, '-')}.docx`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  safeDownload(blob, `${templateName.replace(/\s+/g, '-')}.docx`);
 }
 
 /**
@@ -301,12 +295,5 @@ export async function exportAsDOCX(templateName: string, content: string): Promi
  */
 export function exportAsMarkdown(templateName: string, content: string): void {
   const blob = new Blob([content], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${templateName.replace(/\s+/g, '-')}.md`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  safeDownload(blob, `${templateName.replace(/\s+/g, '-')}.md`);
 }

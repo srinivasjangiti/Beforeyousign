@@ -4,17 +4,19 @@ import { pipeline, env, FeatureExtractionPipeline } from '@xenova/transformers';
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 
+const globalForPipeline = globalThis as unknown as {
+  pipelinePromise: Promise<FeatureExtractionPipeline> | undefined;
+};
+
 class EmbeddingsPipeline {
   static task = 'feature-extraction';
   static model = 'Xenova/all-MiniLM-L6-v2';
-  static instance: Promise<FeatureExtractionPipeline> | null = null;
 
   static async getInstance(progress_callback?: any) {
-    if (this.instance === null) {
-      // Create pipeline (downloading model if needed)
-      this.instance = pipeline(this.task as any, this.model, { progress_callback }) as Promise<FeatureExtractionPipeline>;
+    if (!globalForPipeline.pipelinePromise) {
+      globalForPipeline.pipelinePromise = pipeline(this.task as any, this.model, { progress_callback }) as Promise<FeatureExtractionPipeline>;
     }
-    return this.instance;
+    return globalForPipeline.pipelinePromise;
   }
 }
 

@@ -170,20 +170,8 @@ export default function AnalyzePageClient() {
                     {statusMessage || 'Preparing analysis...'}
                   </p>
 
-                  {/* Live AI output — terminal style */}
-                  {streamingText ? (
-                    <div
-                      ref={terminalRef}
-                      className="bg-stone-950 rounded-lg p-4 font-mono text-xs text-green-400 max-h-60 overflow-y-auto"
-                    >
-                      <pre className="whitespace-pre-wrap break-all leading-relaxed">
-                        {streamingText}
-                        <span className="inline-block w-[7px] h-[1em] bg-green-400 ml-0.5 align-middle animate-pulse" />
-                      </pre>
-                    </div>
-                  ) : (
-                    /* Skeleton steps before streaming starts */
-                    <div className="space-y-3">
+                  {/* Skeleton steps before analysis finishes */}
+                  <div className="space-y-3">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-stone-900 rounded-full animate-pulse" />
                         <span className="text-sm text-stone-700">Parsing document structure...</span>
@@ -201,7 +189,6 @@ export default function AnalyzePageClient() {
                         <span className="text-sm text-stone-400">Generating recommendations...</span>
                       </div>
                     </div>
-                  )}
                 </div>
               </div>
 

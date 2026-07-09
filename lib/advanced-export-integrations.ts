@@ -369,7 +369,7 @@ export class AdvancedExportEngine {
 
   private exportToHTML(content: string, options: ExportOptions): string {
     // Convert markdown to HTML
-    let html = content
+    const html = content
       .replace(/^# (.+)$/gm, '<h1>$1</h1>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -409,7 +409,7 @@ export class AdvancedExportEngine {
 
   private exportToLaTeX(content: string, options: ExportOptions): string {
     // Convert markdown to LaTeX
-    let latex = content
+    const latex = content
       .replace(/^# (.+)$/gm, '\\section{$1}')
       .replace(/^## (.+)$/gm, '\\subsection{$1}')
       .replace(/^### (.+)$/gm, '\\subsubsection{$1}')

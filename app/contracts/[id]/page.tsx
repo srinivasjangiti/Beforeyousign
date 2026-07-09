@@ -1,14 +1,15 @@
 import { notFound } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import AnalysisResult from '@/components/AnalysisResult';
 import { ContractAnalysis } from '@/lib/types';
 import Link from 'next/link';
 import { ChevronLeft, FileText, Link2 } from 'lucide-react';
 import { getContractEmbedding, computeSemanticSimilarity } from '@/lib/ml/portfolio-similarity';
 
-const prisma = new PrismaClient();
 
-export default async function ContractDetailPage({ params }: { params: { id: string } }) {
+export default async function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   const allContracts = await prisma.analyzedContract.findMany({
     select: {
       id: true,
@@ -22,7 +23,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
     }
   });
 
-  const contract = allContracts.find(c => c.id === params.id);
+  const contract = allContracts.find(c => c.id === id);
 
   if (!contract) {
     return notFound();

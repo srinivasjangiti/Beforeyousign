@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIContractDrafter, ContractDraftRequest } from '@/lib/ai-contract-drafter';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {

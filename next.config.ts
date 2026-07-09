@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
@@ -22,7 +22,8 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' blob: data: https:",
       "connect-src 'self' https://integrate.api.nvidia.com https://clerk.clerk.services https://*.clerk.accounts.dev wss://*.clerk.accounts.dev",
-      "frame-src 'none'",
+      "frame-src 'self'",
+      "object-src 'self'",
     ].join("; "),
   },
 ];
