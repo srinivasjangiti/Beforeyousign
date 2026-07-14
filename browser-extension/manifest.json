@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "BeforeYouSign — Contract Risk Analyzer",
+  "version": "1.0.0",
+  "description": "Grammarly for contracts. Instantly highlights risky clauses on any web page with AI-powered explanations.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "BeforeYouSign"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://beforeyousign.vercel.app/*",
+    "http://localhost:3000/*"
+  ],
+  "options_page": "options/options.html",
+  "commands": {
+    "analyze-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Analyze contract on current page"
+    },
+    "toggle-highlights": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H",
+        "mac": "Command+Shift+H"
+      },
+      "description": "Toggle contract highlights"
+    }
+  }
+}

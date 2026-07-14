@@ -1,0 +1,98 @@
+SOFTWARE AS A SERVICE AGREEMENT
+
+This Software as a Service Agreement ("Agreement") is entered into between CloudStack Pro, Inc. ("Provider") and the subscribing entity ("Customer") as of the date of account creation.
+
+1. SERVICE DESCRIPTION
+Provider grants Customer a limited, non-exclusive, non-transferable license to access Provider's cloud software platform. Provider may modify, suspend, or discontinue any features at any time without notice or liability.
+
+2. SUBSCRIPTION AND PAYMENT
+2.1 Customer shall pay the subscription fees indicated at signup, plus all applicable taxes and surcharges.
+2.2 Subscription automatically renews annually unless Customer cancels at least ninety (90) days before renewal date.
+2.3 All fees are non-refundable, including if Customer cancels early or stops using the service.
+2.4 Provider may increase fees at any time by posting notice on its website. Continued use constitutes acceptance.
+2.5 Late payments incur 5% monthly interest and Provider may suspend service without notice.
+
+3. DATA AND INTELLECTUAL PROPERTY
+3.1 Customer grants Provider a perpetual, irrevocable, worldwide, royalty-free license to use, modify, reproduce, and create derivative works from all Customer Data uploaded to the platform, even after termination.
+3.2 Provider may use Customer Data for any purpose including training AI models, marketing, analytics, and resale to third parties.
+3.3 Any suggestions, feedback, or ideas provided by Customer become Provider's exclusive property.
+3.4 Customer retains no rights to any data processed through the service.
+
+4. WARRANTIES AND DISCLAIMERS
+4.1 SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT ANY WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.
+4.2 PROVIDER DISCLAIMS ALL WARRANTIES INCLUDING MERCHANTABILITY, FITNESS FOR PARTICULAR PURPOSE, NON-INFRINGEMENT, ACCURACY, RELIABILITY, OR AVAILABILITY.
+4.3 Provider does not warrant that service will be uninterrupted, error-free, secure, or meet Customer's requirements.
+4.4 Provider is not responsible for data loss, corruption, or unauthorized access.
+
+5. LIMITATION OF LIABILITY
+5.1 PROVIDER'S TOTAL LIABILITY FOR ALL CLAIMS SHALL NOT EXCEED $50 (FIFTY US DOLLARS), REGARDLESS OF AMOUNT PAID BY CUSTOMER.
+5.2 PROVIDER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES.
+5.3 This limitation applies even if Provider has been advised of possibility of damages and regardless of whether limited remedy fails of essential purpose.
+
+6. INDEMNIFICATION
+Customer shall indemnify, defend, and hold harmless Provider from all claims, damages, losses, liabilities, and expenses (including attorney fees) arising from: (a) Customer's use of service; (b) Customer Data; (c) Customer's violation of any law; (d) any third-party claims related to Customer's business; or (e) any acts or omissions by Customer's employees or contractors. Customer shall reimburse Provider within 15 days of demand.
+
+7. TERMINATION
+7.1 Provider may terminate Customer's account immediately without notice for any reason or no reason.
+7.2 Upon termination, Customer's access to all data is immediately revoked and data will be deleted within 24 hours.
+7.3 Provider has no obligation to provide data export or backup upon termination.
+7.4 Customer remains liable for all fees through the end of the subscription term, even if terminated early.
+
+8. DISPUTE RESOLUTION AND ARBITRATION
+8.1 Any dispute shall be resolved exclusively through individual binding arbitration in San Francisco, California.
+8.2 Customer waives all rights to jury trial, class action, or court proceedings.
+8.3 Arbitration shall be confidential. Customer may not disclose the dispute or results.
+8.4 Customer shall pay all arbitration costs including Provider's attorney fees if Provider prevails.
+8.5 Arbitrator's decision is final and binding with no right of appeal.
+8.6 If arbitration clause is invalid, exclusive venue is San Francisco Superior Court and Customer waives all jurisdictional objections.
+
+9. MODIFICATIONS TO AGREEMENT
+9.1 Provider may modify this Agreement at any time by posting changes on its website or within the application.
+9.2 Changes are effective immediately upon posting without additional notice.
+9.3 Customer's continued use constitutes acceptance of all modifications.
+9.4 Customer is solely responsible for reviewing Agreement for changes.
+
+10. ACCEPTABLE USE
+10.1 Provider may monitor all Customer usage and data at any time without notice.
+10.2 Provider determines acceptable use in its sole discretion.
+10.3 Violations may result in immediate termination without refund.
+10.4 Customer is liable for all usage by anyone accessing Customer's account.
+
+11. SECURITY AND PRIVACY
+11.1 Provider implements security measures at its sole discretion but makes no guarantees.
+11.2 Customer acknowledges data may be accessed by Provider employees and contractors without restriction.
+11.3 Provider may share Customer Data with unnamed third parties for business purposes.
+11.4 Customer consents to international data transfers to any country where Provider operates.
+
+12. SERVICE LEVEL
+12.1 Provider makes no guarantees regarding uptime, performance, or availability.
+12.2 Scheduled or unscheduled maintenance may occur at any time.
+12.3 Provider is not liable for service interruptions, regardless of cause or duration.
+
+13. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement and supersedes all prior discussions, proposals, or agreements. Any verbal statements by Provider representatives are not binding.
+
+14. EXPORT COMPLIANCE
+Customer is responsible for compliance with all export control laws. Provider has no obligations regarding export compliance.
+
+15. SURVIVAL
+Sections 3 (Data Rights), 4 (Disclaimers), 5 (Liability Limitations), 6 (Indemnification), 8 (Arbitration), and any payment obligations survive termination indefinitely.
+
+16. ASSIGNMENT
+Provider may assign this Agreement to any party without notice or consent. Customer may not assign without Provider's written consent.
+
+17. GOVERNING LAW
+This Agreement is governed by California law, excluding conflict of law principles. UN Convention on Contracts for the International Sale of Goods does not apply.
+
+18. NO WAIVER
+Provider's failure to enforce any right does not waive that right. Customer's failure to comply with any obligation results in immediate waiver of all rights.
+
+19. FORCE MAJEURE
+Provider is excused from performance for any cause beyond its reasonable control, but Customer remains obligated to pay all fees.
+
+20. ACKNOWLEDGMENT
+By clicking "I Agree" or using the service, Customer acknowledges reading this Agreement and agrees to be bound by all terms.
+
+
+Last Updated: January 1, 2025
+CloudStack Pro, Inc.

@@ -1,0 +1,63 @@
+FREELANCE SERVICE AGREEMENT
+
+This Freelance Service Agreement ("Agreement") is entered into as of January 1, 2025, between ABC Company, Inc. ("Client") and Jane Doe ("Contractor").
+
+1. SERVICES
+Contractor agrees to provide web development services as outlined in project specifications. Specific deliverables and timelines will be documented in separate project proposals approved by both parties.
+
+2. COMPENSATION
+2.1 Contractor shall be paid at the rate of $100 per hour for services performed.
+2.2 Invoices will be submitted bi-weekly and payment is due within 30 days of receipt.
+2.3 Late payments will incur 1.5% monthly interest after 30 days.
+2.4 Client will reimburse pre-approved expenses with proper documentation.
+
+3. INDEPENDENT CONTRACTOR STATUS
+Contractor is an independent contractor, not an employee. Contractor is responsible for own taxes, insurance, and benefits. Contractor may serve other clients.
+
+4. INTELLECTUAL PROPERTY
+4.1 Work Product: Upon full payment, Client owns all deliverables created specifically for Client under this Agreement.
+4.2 Pre-existing Materials: Contractor retains ownership of all pre-existing materials, templates, and tools. Client receives a non-exclusive license to use such materials as incorporated in deliverables.
+4.3 Portfolio Use: Contractor may display work in portfolio and promotional materials unless Client reasonably designates project as confidential.
+
+5. CONFIDENTIALITY
+Both parties agree to maintain confidentiality of proprietary information disclosed during the engagement. This obligation survives for 3 years after termination. Confidential information does not include information that is publicly available or independently developed.
+
+6. TERM AND TERMINATION
+6.1 This Agreement begins on the date above and continues until terminated.
+6.2 Either party may terminate with 30 days written notice.
+6.3 Client may terminate immediately for material breach, with Contractor having 10 days to cure.
+6.4 Upon termination, Client pays for all work completed through termination date.
+6.5 Contractor will deliver all work in progress and return Client materials.
+
+7. WARRANTIES AND REPRESENTATIONS
+7.1 Contractor warrants that work will be performed in a professional manner consistent with industry standards.
+7.2 Contractor warrants that deliverables will not infringe third-party intellectual property rights.
+7.3 Contractor will correct defects in deliverables for 90 days after delivery at no charge.
+
+8. LIMITATION OF LIABILITY
+8.1 Contractor's total liability shall not exceed the amount paid by Client in the 6 months preceding the claim.
+8.2 Neither party shall be liable for indirect, consequential, or punitive damages.
+8.3 This limitation does not apply to breaches of confidentiality or intellectual property violations.
+
+9. DISPUTE RESOLUTION
+9.1 The parties will attempt to resolve disputes through good faith negotiation.
+9.2 If negotiation fails, parties agree to mediation before pursuing litigation.
+9.3 This Agreement is governed by [Reasonable State] law.
+9.4 Venue for any legal action is courts in [Neutral Location].
+9.5 Prevailing party in litigation may recover reasonable attorney fees.
+
+10. GENERAL PROVISIONS
+10.1 Changes to this Agreement must be in writing and signed by both parties.
+10.2 This Agreement may be assigned only with written consent of the other party.
+10.3 If any provision is invalid, the remaining provisions remain in effect.
+10.4 This Agreement constitutes the entire agreement between the parties.
+
+Both parties have read and agree to the terms of this Agreement.
+
+
+CONTRACTOR: ______________________ DATE: ______________
+Jane Doe
+
+CLIENT: ___________________________ DATE: ______________
+ABC Company, Inc.
+By: [Authorized Representative]

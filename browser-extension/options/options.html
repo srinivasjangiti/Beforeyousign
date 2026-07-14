@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BeforeYouSign — Settings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      color: #1c1917;
+      background: #fafaf9;
+      padding: 32px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo { font-size: 24px; }
+    h1 { font-size: 18px; font-weight: 800; }
+    .section {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #78716c;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+    label.inline { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d6d3d1;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, input[type="url"]:focus {
+      outline: none;
+      border-color: #1c1917;
+    }
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 22px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #d6d3d1;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .slider:before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    input:checked + .slider { background: #1c1917; }
+    input:checked + .slider:before { transform: translateX(16px); }
+    .hint { font-size: 12px; color: #78716c; margin-top: 3px; }
+    .save-btn {
+      background: #1c1917;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .save-btn:hover { background: #292524; }
+    .saved-msg { color: #16a34a; font-size: 12px; font-weight: 600; margin-left: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">⚖</span>
+    <h1>BeforeYouSign Settings</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">API Configuration</div>
+    <div class="field">
+      <label for="apiBase">BeforeYouSign App URL</label>
+      <input type="url" id="apiBase" placeholder="http://localhost:3000" />
+      <div class="hint">Change this to your deployed URL when hosting publicly.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Behavior</div>
+    <div class="field">
+      <label class="inline" for="autoAnalyze">
+        Auto-analyze contract pages
+        <label class="toggle">
+          <input type="checkbox" id="autoAnalyze" checked />
+          <span class="slider"></span>
+        </label>
+      </label>
+      <div class="hint">Automatically scan for contracts when you visit a page.</div>
+    </div>
+    <div class="field">
+      <label class="inline" for="showBadge">
+        Show floating risk badge
+        <label class="toggle">
+          <input type="checkbox" id="showBadge" checked />
+          <span class="slider"></span>
+        </label>
+      </label>
+      <div class="hint">Display the risk count overlay in the bottom-right corner.</div>
+    </div>
+    <div class="field">
+      <label class="inline" for="highlightsOn">
+        Enable inline highlights by default
+        <label class="toggle">
+          <input type="checkbox" id="highlightsOn" checked />
+          <span class="slider"></span>
+        </label>
+      </label>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center;">
+    <button class="save-btn" id="save">Save Settings</button>
+    <span class="saved-msg" id="saved-msg">✓ Saved!</span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

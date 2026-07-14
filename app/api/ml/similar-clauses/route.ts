@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import { findSimilarClause } from '@/lib/ml/retrieval';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const text = body.text;
+    const topK = Math.min(body.topK || 3, 100);
+    const currentRiskScore = body.currentRiskScore;
+    
+    if (!text || typeof text !== 'string') {
+      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
+    }
+
+    const retrievalResponse = await findSimilarClause(text, topK, currentRiskScore);
+    
+    return NextResponse.json({ 
+      success: true, 
+      results: retrievalResponse.results,
+      predictedCategory: retrievalResponse.predictedCategory,
+      confidence: retrievalResponse.confidence,
+      recommendedAlternative: retrievalResponse.recommendedAlternative
+    });
+  } catch (error) {
+    console.error('Error in semantic search API:', error);
+    return NextResponse.json({ success: false, error: 'Semantic search failed' }, { status: 500 });
+  }
+}

@@ -1,0 +1,324 @@
+'use client';
+
+import { FileText, Download, Copy, Calendar, Tag, BookOpen, ArrowRight, Check } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import PDFViewer from '@/components/PDFViewer';
+
+const papers = [
+  {
+    id: 'cot',
+    tabLabel: 'CoT Reasoning',
+    title: 'Faithfulness, Robustness, and Generalization in Chain-of-Thought Reasoning',
+    subtitle: 'A Critical Evaluation of Large Language Models for High-Stakes Decision Support',
+    author: 'Srinivas Jangiti',
+    date: 'June 2026',
+    abstract: `Chain-of-thought (CoT) prompting has emerged as the dominant paradigm for eliciting multi-step reasoning from large language models (LLMs), yet the practical reliability of the resulting rationales remains contested. This paper presents a critical, mixed-methods evaluation of frontier LLMs across three properties that jointly determine whether CoT outputs are suitable for high-stakes decision support: faithfulness (whether stated reasoning causally drives the answer), robustness (whether outputs are stable under semantically irrelevant perturbations), and generalization (whether reasoning competence transfers across domains, jurisdictions, and populations). We construct a curated benchmark of 2,148 high-stakes items spanning legal contract review, clinical triage, and financial credit analysis; we evaluate five frontier models; and we introduce a suite of faithfulness probes, perturbation protocols, and cross-domain transfer tests. Our results reveal a substantial faithfulness gap: across all evaluated models, stated reasoning trajectories are systematically unfaithful to the underlying decision process, with 31–58% of correct answers remaining correct when the model's own rationale is silently replaced with an irrelevant, incoherent, or adversarial one. We further document non-trivial robustness decay under five classes of surface and semantic perturbation, and we observe a pronounced domain-transfer penalty averaging 14.7 percentage points. We argue that the prevailing assumption — that CoT explanations are self-evidencing of model competence — is empirically untenable in high-stakes contexts, and we propose a concrete evaluation protocol that practitioners can deploy before integrating LLM-generated rationales into consequential workflows.`,
+    keywords: [
+      'Chain-of-Thought Reasoning',
+      'Faithfulness',
+      'Robustness',
+      'High-Stakes Decision Support',
+      'Large Language Models',
+      'Mechanistic Interpretability',
+    ],
+    publication: {
+      venue: 'Original Research · AI Evaluation & Safety',
+      status: 'Pre-print, under review',
+      pages: '29 (including appendices)',
+    },
+    bibtex: `@article{jangiti2026cot,
+  title={Faithfulness, Robustness, and Generalization in Chain-of-Thought Reasoning: A Critical Evaluation of Large Language Models for High-Stakes Decision Support},
+  author={Jangiti, Srinivas},
+  year={2026},
+  month={June},
+  journal={Pre-print, under review},
+  abstract={Chain-of-thought (CoT) prompting has emerged as the dominant paradigm for eliciting multi-step reasoning from large language models (LLMs), yet the practical reliability of the resulting rationales remains contested.},
+  keywords={Chain-of-Thought, Faithfulness, Robustness, High-Stakes Decision Support, Large Language Models, Mechanistic Interpretability}
+}`,
+    references: [
+      'Adebayo et al. (2018). Sanity checks for saliency maps. NeurIPS.',
+      'Amann et al. (2020). Explainability for artificial intelligence in healthcare. BMC Medical Informatics.',
+      'Hendrycks et al. (2021). CUAD: An expert-annotated NLP dataset for legal contract review. NeurIPS.',
+      'Jacovi & Goldberg (2022). Towards faithfully interpretable NLP systems. arXiv.',
+      'Kojima et al. (2022). Large language models are zero-shot reasoners. NeurIPS.',
+      'Lanham et al. (2023). Measuring faithfulness in chain-of-thought reasoning. arXiv.',
+      'Turpin et al. (2024). Language models don\'t always say what they think. NeurIPS.',
+      'Wei et al. (2022). Chain-of-thought prompting elicits reasoning in large language models. NeurIPS.',
+    ],
+    pdfSrc: '/research-paper.pdf',
+    downloadHref: '/research-paper.pdf',
+    downloadFilename: 'faithfulness-robustness-cot-reasoning.pdf',
+  },
+  {
+    id: 'semantic',
+    tabLabel: 'Semantic Retrieval',
+    title: 'Lightweight Semantic Retrieval for Contract Risk Benchmarking',
+    subtitle: 'System Design and a Small-Scale Empirical Evaluation on a Curated LEDGAR Subset',
+    author: 'Srinivas Jangiti',
+    date: 'July 2026',
+    abstract: `Contract review platforms increasingly pair large generative models with lightweight, deterministic retrieval components to ground otherwise unconstrained text generation in verifiable precedent. This paper documents the design and a small-scale empirical evaluation of the semantic clause-benchmarking module of BeforeYouSign, a contract-intelligence platform built on Next.js, PostgreSQL/Prisma, an NVIDIA NIM-hosted Llama 3.1 405B model for generative extraction, and a locally executed all-MiniLM-L6-v2 sentence embedding model (384 dimensions, ONNX runtime via Transformers.js) for similarity search and category prediction. We describe the retrieval architecture — cosine-similarity search over a curated 250-clause subset of the LEDGAR corpus, k-nearest-neighbour category prediction, and a risk-aware recommendation step that filters retrieved neighbours by a lower historical risk benchmark — and we report a leave-one-out evaluation of the k-NN classifier's category-prediction accuracy at k ∈ {1,3,5,10,15,20}, with bootstrap 95% confidence intervals. Best-case embedding accuracy (k=3) is 56.8% [95% CI: 50.4–62.8%] against a majority-class baseline of 36.4%. To contextualize this result, we implement a BM25 lexical-retrieval baseline over the same corpus and find its best-case accuracy (54.8% at k=10) statistically indistinguishable from the embedding classifier (McNemar's χ²=1.50, p=0.22) at this sample size — an honest finding that tempers claims of semantic-embedding superiority until the corpus is scaled up. We additionally test similarity-weighted versus unweighted k-NN voting (no measurable difference at k=3), report per-category precision/recall/F1 for categories with adequate support, visualize the embedding space via PCA, and document an unplanned finding: the corpus's risk-score benchmark is assigned per category rather than derived per clause, meaning current risk estimates are categorical rather than empirically continuous. We present these results as an honest, statistically grounded case study of a deployed lightweight-embedding retrieval system rather than as a claim of general-purpose legal-NLP superiority, and we discuss the corpus-size and labeling limitations that bound the generalizability of the reported numbers.`,
+    keywords: [
+      'Sentence Embeddings',
+      'Semantic Retrieval',
+      'k-Nearest Neighbours',
+      'Contract Intelligence',
+      'LEDGAR',
+      'Legal NLP',
+      'Retrieval-Augmented Systems',
+    ],
+    publication: {
+      venue: 'Systems Case Study · Legal NLP & Contract Intelligence',
+      status: 'Pre-print, under review',
+      pages: '20 (including appendices)',
+    },
+    bibtex: `@article{jangiti2026semantic,
+  title={Lightweight Semantic Retrieval for Contract Risk Benchmarking: System Design and a Small-Scale Empirical Evaluation on a Curated LEDGAR Subset},
+  author={Jangiti, Srinivas},
+  year={2026},
+  month={July},
+  journal={Pre-print, under review},
+  abstract={This paper documents the design and evaluation of the semantic clause-benchmarking module of BeforeYouSign, combining a generative LLM with a lightweight sentence-embedding retrieval pipeline over a curated LEDGAR corpus subset.},
+  keywords={sentence embeddings; semantic retrieval; k-nearest neighbours; contract intelligence; LEDGAR; legal NLP; retrieval-augmented systems}
+}`,
+    references: [
+      'Lewis et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. NeurIPS 33.',
+      'McNemar, Q. (1947). Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages. Psychometrika, 12(2).',
+      'Reimers & Gurevych (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. EMNLP.',
+      'Robertson & Zaragoza (2009). The Probabilistic Relevance Framework: BM25 and Beyond. Foundations and Trends in Information Retrieval.',
+      'Tuggener et al. (2020). LEDGAR: A Large-Scale Multi-Label Corpus for Text Classification of Legal Provisions in Contracts. LREC.',
+      'Wang et al. (2020). MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers. NeurIPS 33.',
+    ],
+    pdfSrc: '/semantic-retrieval-paper.pdf',
+    downloadHref: '/semantic-retrieval-paper.pdf',
+    downloadFilename: 'bys-semantic-retrieval-ledgar.pdf',
+  },
+];
+
+export default function ResearchPageClient() {
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'cot' | 'semantic'>('cot');
+
+  const paper = papers.find((p) => p.id === activeTab)!;
+
+  const copyBibtex = async () => {
+    await navigator.clipboard.writeText(paper.bibtex);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-50">
+      {/* Tab Switcher */}
+      <div className="bg-white border-b-2 border-stone-900 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="flex items-center gap-0">
+            <span className="mono text-xs text-stone-400 tracking-wider uppercase mr-6 hidden sm:inline">
+              Publications
+            </span>
+            {papers.map((p) => (
+              <button
+                key={p.id}
+                id={`research-tab-${p.id}`}
+                onClick={() => { setActiveTab(p.id as 'cot' | 'semantic'); setCopied(false); }}
+                className={`px-5 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                  activeTab === p.id
+                    ? 'border-stone-900 text-stone-900'
+                    : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
+                }`}
+              >
+                {p.tabLabel}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section className="relative bg-white border-b-2 border-stone-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
+          <div className="max-w-4xl">
+            <div className="mb-4">
+              <span className="mono text-xs text-stone-500 tracking-wider uppercase">{paper.publication.venue}</span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900 mb-4 sm:mb-6 leading-[1.1] tracking-tight">
+              {paper.title}
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-stone-600 italic mb-6 sm:mb-8 leading-relaxed font-light">
+              {paper.subtitle}
+            </p>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-8">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-stone-500" />
+                <span className="text-sm font-medium text-stone-700">{paper.author}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-stone-500" />
+                <span className="text-sm text-stone-600">{paper.date}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-2 py-1 bg-stone-100 text-stone-700 rounded-full font-medium">
+                  {paper.publication.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href={paper.downloadHref}
+                download={paper.downloadFilename}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-900 text-white font-medium hover:bg-stone-800 transition-all duration-300 group"
+              >
+                <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                <span>Download PDF</span>
+              </a>
+              <Link
+                href={paper.pdfSrc}
+                target="_blank"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-stone-900 text-stone-900 font-medium hover:bg-stone-50 transition-all duration-300"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Read Full Paper</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Abstract Section */}
+      <section className="bg-white py-12 sm:py-16 md:py-20 border-t border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <span className="mono text-xs text-stone-500 tracking-wider uppercase">Abstract</span>
+            </div>
+            
+            <div className="bg-stone-50/50 border-l-4 border-stone-900 p-6 sm:p-8">
+              <p className="text-base sm:text-lg text-stone-700 leading-relaxed font-light">
+                {paper.abstract}
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Tag className="w-4 h-4 text-stone-500" />
+                <span className="text-sm font-semibold text-stone-900 uppercase tracking-wider">Keywords</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {paper.keywords.map((keyword) => (
+                  <span
+                    key={keyword}
+                    className="text-xs px-3 py-1.5 bg-stone-100 text-stone-700 rounded-full font-medium hover:bg-stone-200 transition-colors"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Citation Section */}
+      <section className="bg-stone-50 py-12 sm:py-16 md:py-20 border-t-2 border-stone-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <span className="mono text-xs text-stone-500 tracking-wider uppercase">Citation</span>
+            </div>
+            
+            <div className="bg-white border-2 border-stone-200">
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wider">BibTeX Entry</h3>
+                  <button
+                    onClick={copyBibtex}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-colors border border-stone-300 rounded ${copied ? 'text-green-700 bg-green-50' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'}`}
+                    aria-label="Copy BibTeX to clipboard"
+                  >
+                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+                <pre className="text-xs sm:text-sm bg-stone-50 p-4 overflow-x-auto">
+                  <code className="font-mono text-stone-700">{paper.bibtex}</code>
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* References Section */}
+      <section className="bg-white py-12 sm:py-16 md:py-20 border-t-2 border-stone-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <span className="mono text-xs text-stone-500 tracking-wider uppercase">Selected References</span>
+            </div>
+
+            <div className="space-y-3">
+              {paper.references.map((ref, index) => (
+                <div key={index} className="border-l-2 border-stone-300 pl-4 py-2">
+                  <p className="text-sm text-stone-700 font-light">{ref}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 p-6 bg-stone-50 border-t-2 border-stone-900">
+              <p className="text-sm text-stone-600">
+                <strong className="text-stone-900">Note:</strong>{' '}
+                {paper.id === 'cot'
+                  ? 'The full reference list with 47 citations is available in the PDF. This research contributes to the BeforeYouSign platform\'s commitment to rigorous, evidence-based AI evaluation for high-stakes contract analysis.'
+                  : 'The full reference list and appendices are available in the PDF. This case study is grounded in the platform\'s actual deployment data and reproducible evaluation scripts.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="text-white py-12 sm:py-16 md:py-20 cta-section">
+        <div className="cta-section-bg" />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 text-center cta-section-content">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 leading-tight">
+            Apply Research Insights to Your Contracts
+          </h3>
+          <p className="text-base text-stone-300 leading-relaxed font-light mb-8">
+            Our platform implements rigorous evaluation protocols for LLM-powered contract analysis,
+            ensuring transparency and reliability in high-stakes decisions.
+          </p>
+          <Link
+            href="/analyze"
+            className="inline-flex items-center gap-2 px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-stone-900 font-medium hover:bg-stone-100 transition-all duration-300 group w-full sm:w-auto justify-center"
+          >
+            <span>Analyze Your Contract</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <p className="mt-4 text-xs text-stone-400">No account required • Instant results</p>
+        </div>
+      </section>
+
+      {/* Embedded PDF Preview (Lazy-loaded) */}
+      <section className="bg-stone-50 py-12 sm:py-16 border-t border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <span className="mono text-xs text-stone-500 tracking-wider uppercase">Paper Preview</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-2">Embedded Document Viewer</h2>
+            </div>
+
+            <PDFViewer
+              src={paper.pdfSrc}
+              downloadHref={paper.downloadHref}
+              downloadFilename={paper.downloadFilename}
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
