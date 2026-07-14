@@ -5,14 +5,14 @@ import ResearchPageClient from './ResearchPageClient';
 const BASE_URL = 'https://beforeyousign.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'Research — Chain-of-Thought Reasoning in Large Language Models',
+  title: 'Research — AI & Legal NLP Publications by BeforeYouSign',
   description:
-    'Original research on faithfulness, robustness, and generalization in chain-of-thought reasoning for high-stakes AI decision support. Empirical evaluation of frontier LLMs.',
+    'Original research papers by the BeforeYouSign team: chain-of-thought reasoning faithfulness in LLMs, and lightweight semantic retrieval for contract risk benchmarking using LEDGAR.',
   alternates: { canonical: `${BASE_URL}/research` },
   openGraph: {
     title: 'Research — BeforeYouSign',
     description:
-      'Academic research on LLM chain-of-thought reasoning reliability for high-stakes decision support, including legal contract review, clinical triage, and financial analysis.',
+      'Academic research on LLM reasoning reliability and semantic retrieval for contract intelligence, including empirical evaluations on legal clause classification and CoT faithfulness.',
     url: `${BASE_URL}/research`,
     type: 'article',
     images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Research — BeforeYouSign',
-    description: 'Original research on LLM faithfulness, robustness, and generalization in chain-of-thought reasoning.',
+    description: 'Original research on LLM faithfulness in CoT reasoning and lightweight semantic retrieval for legal contract risk benchmarking.',
     images: ['/opengraph-image'],
   },
 };
