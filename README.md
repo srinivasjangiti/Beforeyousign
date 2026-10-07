@@ -28,8 +28,21 @@
 **BeforeYouSign** is an end-to-end, enterprise-grade AI legal platform designed to democratize legal comprehension and empower individuals, founders, and legal teams before they commit to legally binding contracts.
 
 Modern agreements are intentionally convoluted. BeforeYouSign demystifies legal jargon using a **dual-pipeline intelligence architecture**:
-1. **Generative LLM Reasoning (NVIDIA NIM / Llama 3.1 & Gemini):** Contextual red-flag analysis, financial exposure calculations, counter-clause synthesis, and natural language contract negotiation.
+1. **Generative LLM Reasoning (NVIDIA NIM / Llama 3.3 & Gemini):** Contextual red-flag analysis, financial exposure calculations, counter-clause synthesis, and natural language contract negotiation.
 2. **Local Edge Embeddings & Vector Benchmarking (ONNX MiniLM-L6-v2):** Fast, zero-API-cost 384-dimensional semantic similarity matching against thousands of SEC-filed clauses from the curated **LEDGAR corpus**, producing deterministic **Estimated Risk Reduction (ERR)** metrics and k-NN classification.
+
+---
+
+## 📚 Documentation
+
+Detailed, unbiased, and straightforward guides are available in the [`docs/`](./docs) directory:
+
+- 🏛️ [**System Architecture**](./docs/architecture.md) — Dual-pipeline AI architecture, request flows, and component breakdown.
+- ✨ [**Features & User Workflows**](./docs/features.md) — Comprehensive guide to the Analyzer, Precedent Benchmarking, Drafter, and PDF Tools.
+- 🧠 [**Machine Learning & Vector Engine**](./docs/ml-engine.md) — ONNX MiniLM runtime, LEDGAR precedent embeddings, k-NN, and ERR metric formulas.
+- 🔌 [**API Reference**](./docs/api-reference.md) — Detailed catalog of all `/api/*` endpoints with request and response payloads.
+- 🧩 [**Chrome Browser Extension**](./docs/chrome-extension.md) — Manifest V3 architecture, in-page DOM highlight mechanics, and installation.
+- 🛠️ [**Development & Setup Guide**](./docs/development-guide.md) — Step-by-step local setup, environment variables, Prisma migrations, and troubleshooting.
 
 ---
 
