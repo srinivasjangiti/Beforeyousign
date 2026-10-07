@@ -43,6 +43,7 @@ Detailed, unbiased, and straightforward guides are available in the [`docs/`](./
 - 🔌 [**API Reference**](./docs/api-reference.md) — Detailed catalog of all `/api/*` endpoints with request and response payloads.
 - 🧩 [**Chrome Browser Extension**](./docs/chrome-extension.md) — Manifest V3 architecture, in-page DOM highlight mechanics, and installation.
 - 🛠️ [**Development & Setup Guide**](./docs/development-guide.md) — Step-by-step local setup, environment variables, Prisma migrations, and troubleshooting.
+- 📊 [**Slide Presentation Deck**](./docs/presentation.md) — 16-slide presentation deck (Marp-ready) with architecture diagrams and speaker notes.
 
 ---
 

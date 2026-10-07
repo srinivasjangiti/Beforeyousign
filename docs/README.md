@@ -16,6 +16,7 @@ This documentation is written to be **objective, factual, simple, and detailed**
 | [4. API Reference](api-reference.md) | Complete endpoint catalog for analysis, machine learning, drafting, chat, and PDF operations with request/response schemas. |
 | [5. Chrome Browser Extension](chrome-extension.md) | Guide to the Manifest V3 browser extension: architecture, DOM scanning, in-page risk highlighting, and installation. |
 | [6. Development & Setup Guide](development-guide.md) | Step-by-step setup instructions, environment variables explanation, database setup, and troubleshooting. |
+| [7. Project Slide Deck](presentation.md) | 16-slide presentation deck (Marp-compatible) with architecture diagrams, ERR math, and speaker notes. |
 
 ---
 
