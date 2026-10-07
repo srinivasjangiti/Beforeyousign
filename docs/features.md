@@ -139,3 +139,80 @@ When automated AI analysis indicates complex risks, users can connect with human
 Supports international business contracts by translating and analyzing non-English agreements:
 - Ingests contracts in languages such as Spanish, French, German, and Hindi.
 - Identifies jurisdiction-specific legal terms and translates obligations into plain English while preserving the original legal meaning.
+
+---
+
+## 11. Smart Template Builder & Customization Wizard (`/template-builder`, `/templates`, `/templates-enhanced`)
+
+A dynamic, question-driven engine to assemble custom, legally sound templates without writing contracts from scratch.
+
+### Key Capabilities
+- **Modular Questionnaire:** Guides non-legal founders through step-by-step questions (deal value, payment schedules, IP ownership, liability caps, governing law).
+- **Conditional Clause Insertion:** Dynamically inserts or omits non-solicitation, liquidated damages, or arbitration clauses based on responses.
+- **Customization Wizard:** Live preview of the agreement updating in real-time as variable placeholders are filled.
+- **Template Library:** Pre-built, peer-reviewed templates categorized by industry (Software, Creative Agencies, Real Estate, E-Commerce, Consulting).
+
+---
+
+## 12. Contract Version Comparison (`/compare`)
+
+Enables users to upload two different iterations of the same contract (e.g., initial draft vs. counter-party's markups) to see what changed.
+
+### Key Capabilities
+- **Structural Alignment:** Aligns clauses across revisions even if sections were renumbered or reordered.
+- **Semantic Delta Detection:** Distinguishes between harmless stylistic edits and high-risk substantive alterations (e.g., changing "shall" to "may", or altering a liability cap from $100,000 to $1,000).
+- **Inline & Side-by-Side Views:** Color-coded diff viewers showing added clauses, deleted clauses, and modified wording.
+
+---
+
+## 13. Clause Library & Semantic Contract Search (`/clauses`, `/library`, `/search`)
+
+A centralized repository of verified, battle-tested legal clauses for drafting and negotiation.
+
+### Key Capabilities
+- **Curated Clause Categories:** Fast access to vetted clauses across Indemnification, Confidentiality, Governing Law, Force Majeure, Warranties, and Termination.
+- **Three-Tier Balance Filter:** Browse clauses by negotiation posture: *Pro-Vendor*, *Balanced (Standard)*, or *Pro-Customer*.
+- **Semantic Natural Language Search:** Search clauses by business intent (e.g., *"protect our trade secrets if an employee joins a competitor"*) rather than exact keyword matches.
+
+---
+
+## 14. Team Collaboration & Shared Workspaces (`/team`, `/share`)
+
+Designed for startups and legal departments reviewing agreements collaboratively.
+
+### Key Capabilities
+- **Role-Based Workspace Access:** Admin, Reviewer, and Viewer permissions for managing access to sensitive contracts.
+- **Expiring Share Links:** Secure public/password-protected review links (`/share/[shareId]`) allowing outside counsel or counterparties to review analysis reports without an account.
+- **Collaborative Comments:** Threaded notes and approvals attached directly to specific clauses.
+
+---
+
+## 15. Contract Lifecycle Automation (`/automation`)
+
+Automates routine administrative workflows throughout a contract's lifecycle.
+
+### Key Capabilities
+- **Stage Progression:** Moves contracts through defined stages: *Draft → In Review → Out for Signature → Active → Expired / Renewed*.
+- **Approval Workflows:** Sets up conditional approval rules (e.g., contracts with liability > $50k require finance team approval before signature).
+- **Event-Driven Triggers:** Automatically creates reminder tasks upon contract execution.
+
+---
+
+## 16. Voice Contract Assistant (`/voice`)
+
+An accessibility and efficiency tool enabling hands-free contract comprehension.
+
+### Key Capabilities
+- **Voice-Guided Executive Briefing:** Listens to contract summaries and red-flag alerts read aloud in natural conversational audio.
+- **Voice Querying:** Speak questions (e.g., *"What is our cure period if we default on payment?"*) and receive immediate spoken and visual answers.
+
+---
+
+## 17. Research Paper & Empirical Methodology (`/research`)
+
+An embedded academic portal showcasing the empirical methodology and mathematical foundations behind the platform's semantic retrieval architecture.
+
+### Key Capabilities
+- **In-App Whitepaper Viewer:** Interactive PDF & HTML reading interface displaying the research paper on transformer-based semantic retrieval and SEC EDGAR precedent benchmarking.
+- **Empirical Benchmarks:** Transparent disclosure of vector retrieval latency, embedding accuracy, and clustering performance against standard legal NLP benchmarks.
+

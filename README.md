@@ -137,9 +137,24 @@ flowchart TD
   - **Rotate:** Reorient scanned multi-page agreements.
   - **Convert:** High-resolution image-to-PDF and PDF-to-image conversion.
 
-### 🌐 9. Global Legal Support
+### 🌐 9. Global Legal Support & Voice Assistant
 - **Multi-Language Analysis:** Analyzes agreements in English, Spanish, French, German, Hindi, and more with localized jurisdictional context.
-- **Voice Assistant:** Hands-free voice navigation and audio contract summaries.
+- **Voice Assistant:** Hands-free speech-to-text contract querying and audio briefings.
+
+### 📑 10. Smart Template Builder & Customization
+- **Dynamic Questionnaires:** Step-by-step modular questionnaire to generate customized commercial agreements.
+- **Variable Placeholders:** Live previews with real-time updates as variables (parties, governing law, deal size) are populated.
+
+### 🔄 11. Version Comparison & Clause Library
+- **Contract Diffing (`/compare`):** Side-by-side semantic comparison showing material vs. stylistic changes between revisions.
+- **Verified Clause Repository (`/clauses`, `/library`):** Searchable legal clause bank filtered by negotiation posture (*Pro-Vendor*, *Balanced*, *Pro-Customer*).
+
+### 👥 12. Team Collaboration & Lifecycle Automation
+- **Expiring Share Links (`/share`):** Secure share links allowing outside counsel to review analysis reports without an account.
+- **Lifecycle Progression (`/automation`):** Conditional routing and automated status transitions (*Draft → Review → Signed → Active*).
+
+### 🎓 13. Academic Research Whitepaper (`/research`)
+- **Empirical Methodology:** Embedded reader for the research paper on transformer-based semantic retrieval and SEC EDGAR precedent benchmarking.
 
 ---
 
@@ -162,7 +177,7 @@ Experience **"Grammarly for Contracts"** while browsing online contracts, terms 
 |---|---|
 | **Frontend Framework** | [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [TypeScript 5](https://www.typescriptlang.org/) |
 | **Styling & Icons** | [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/), [Recharts](https://recharts.org/) |
-| **AI / Large Language Models** | [NVIDIA NIM](https://build.nvidia.com/) (`meta/llama-3.1-70b-instruct`, `meta/llama-3.1-405b-instruct`), [Google Gemini AI](https://ai.google.dev/) |
+| **AI / Large Language Models** | [NVIDIA NIM](https://build.nvidia.com/) (`meta/llama-3.3-70b-instruct`, `meta/llama-3.1-8b-instruct`), [Google Gemini AI](https://ai.google.dev/) |
 | **Local Vector & ML Engine** | [@xenova/transformers](https://github.com/xenova/transformers.js) (ONNX Runtime, `all-MiniLM-L6-v2`), Cosine Similarity |
 | **Document Parsing & Generation** | `pdf-lib`, `pdf-parse`, `mammoth` (DOCX), `docx`, `jspdf`, `html2canvas`, `sharp` |
 | **Database & Persistence** | [Prisma ORM](https://www.prisma.io/), [Supabase](https://supabase.com/) / [PostgreSQL](https://www.postgresql.org/) |
